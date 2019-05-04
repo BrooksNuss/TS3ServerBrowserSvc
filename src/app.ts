@@ -1,18 +1,14 @@
 import express from "express";
 import "ts3-nodejs-library";
+import * as socketIo from 'socket.io';
+import {ts3Config} from '../credentials'
 const TeamSpeak3 = require("ts3-nodejs-library");
 const cors = require('cors');
 const app = express();
 const expressPort = 8080;
-const ts3Config: ConnectionParams = {
-    host: "",
-    queryport: 10011,
-    serverport: 9987,
-    username: "serveradmin",
-    password: "",
-    nickname: "NodeJS Query Framework"
-};
+const socketPort = 8081;
 const ts3: TeamSpeak3 = new TeamSpeak3(ts3Config);
+const socket = socketIo.default(socketPort);
 let ts3Ready = false;
 
 app.use(cors());
@@ -38,5 +34,10 @@ ts3.on("error", (err) => {
     console.log("TS3 ERROR");
     console.log(err);
 });
+
+socket.on('connection', (socket) => {
+    console.log('socket connected:');
+    console.log(socket);
+})
 
 export {ts3};

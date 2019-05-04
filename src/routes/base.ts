@@ -8,6 +8,8 @@ router.use("/users", require("./users"));
 
 router.use("/channels", require("./channels"));
 
+router.use("/groups", require("./groups"));
+
 // router.use("*", (req, res) => {
 //     res.send("/api/v1/");
 // });

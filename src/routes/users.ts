@@ -13,8 +13,4 @@ userRouter.get("/list", (req, res) => {
     });
 });
 
-// userRouter.use("/", (req, res) => {
-//     res.send("users/");
-// });
-
 module.exports = userRouter;
