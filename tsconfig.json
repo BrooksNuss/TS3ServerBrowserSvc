@@ -65,6 +65,7 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "./credentials"
   ]
 }
