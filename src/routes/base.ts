@@ -10,6 +10,8 @@ router.use('/channels', require('./channels'));
 
 router.use('/groups', require('./groups'));
 
+router.use('/rtc', require('./rtc'));
+
 // router.use("*", (req, res) => {
 //     res.send("/api/v1/");
 // });

@@ -51,4 +51,4 @@ socketServer.on('connection', (socket) => {
     });
 });
 
-export {ts3};
+export {ts3, app};
