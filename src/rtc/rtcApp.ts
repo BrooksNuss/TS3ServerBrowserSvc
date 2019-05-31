@@ -1,5 +1,3 @@
-import { app } from "../app";
-
 const WebRtcConnectionManager = require('./connections/webrtcconnectionmanager');
 const {RtcAudioSink} = require('wrtc').nonstandard;
 
@@ -23,3 +21,5 @@ function beforeOffer(peerConnection: any) {
 }
 
 const connectionManager = WebRtcConnectionManager.create(beforeOffer);
+
+export {connectionManager};
