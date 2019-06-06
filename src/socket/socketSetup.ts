@@ -17,8 +17,7 @@ export function setupTSListeners(ts3: TeamSpeak3, socketServer: SocketIO.Server)
 
     standardEvents.forEach(eventType => {
         ts3.on(eventType, event => {
-            console.log('SOCKET EVENT: ' + eventType);
-            console.log(event);
+            // console.log(event);
             socketServer.emit(eventType, event);
         });
     });

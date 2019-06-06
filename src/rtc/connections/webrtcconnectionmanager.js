@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const ConnectionManager = require('./connectionmanager');
-const WebRtcConnection = require('./webrtcconnection');
+const ConnectionManager = require("./connectionmanager");
+const WebRtcConnection = require("./webrtcconnection");
 
 class WebRtcConnectionManager {
   constructor(options = {}) {
     options = {
       Connection: WebRtcConnection,
-      ...options
+      ...options,
     };
 
     const connectionManager = new ConnectionManager(options);
@@ -36,7 +36,7 @@ WebRtcConnectionManager.create = function create(options) {
   return new WebRtcConnectionManager({
     Connection: function(id) {
       return new WebRtcConnection(id, options);
-    }
+    },
   });
 };
 

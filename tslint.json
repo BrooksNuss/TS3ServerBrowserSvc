@@ -1,7 +1,5 @@
 {
   "extends": "tslint:recommended",
-  "rulesDirectory": [
-  ],
   "rules": {
     "array-type": false,
     "arrow-parens": false,
@@ -60,6 +58,11 @@
       "single"
     ],
     "trailing-comma": false
+  },
+  "linterOptions": {
+    "exclude": [
+      "./**/*.js"
+    ]
   }
 }
   

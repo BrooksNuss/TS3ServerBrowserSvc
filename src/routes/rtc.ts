@@ -1,7 +1,5 @@
 import express from 'express';
-import {app} from '../app';
-import {connectionManager} from '../rtc/rtcApp';
-import { connect } from 'http2';
+import {rtcApp} from '../app';
 
 const rtcRouter = express.Router();
 
@@ -10,8 +8,11 @@ const rtcRouter = express.Router();
  */
 rtcRouter.post('/connections', (req, res) => {
     try {
-        const connection = connectionManager.createConnection();
-        res.send(connection);
+        const connection = rtcApp.connectionManager.createConnection().then((conn: any) => {
+            res.send(conn);
+        });
+        console.log(rtcApp);
+        console.log(rtcApp.connectionManager);
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -20,7 +21,7 @@ rtcRouter.post('/connections', (req, res) => {
 
 rtcRouter.delete('/connections/:id', (req, res) => {
     const {id} = req.params;
-    const connection = connectionManager.getConnection(id);
+    const connection = rtcApp.connectionManager.getConnection(id);
     if (!connection) {
         res.sendStatus(404);
         return;
@@ -30,7 +31,7 @@ rtcRouter.delete('/connections/:id', (req, res) => {
 
 rtcRouter.get('/connections/:id/local-description', (req, res) => {
     const {id} = req.params;
-    const connection = connectionManager.getConnection(id);
+    const connection = rtcApp.connectionManager.getConnection(id);
     if (!connection) {
         res.sendStatus(404);
         return;
@@ -40,7 +41,7 @@ rtcRouter.get('/connections/:id/local-description', (req, res) => {
 
 rtcRouter.get('/connections/:id/remote-description', (req, res) => {
     const {id} = req.params;
-    const connection = connectionManager.getConnection(id);
+    const connection = rtcApp.connectionManager.getConnection(id);
     if (!connection) {
         res.sendStatus(404);
         return;

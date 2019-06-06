@@ -1,20 +1,20 @@
-'use strict';
+"use strict";
 
-const uuidv4 = require('uuid/v4');
+const uuidv4 = require("uuid/v4");
 
-const DefaultConnection = require('./connection');
+const DefaultConnection = require("./connection");
 
 class ConnectionManager {
   constructor(options = {}) {
     options = {
       Connection: DefaultConnection,
       generateId: uuidv4,
-      ...options
+      ...options,
     };
 
     const {
       Connection,
-      generateId
+      generateId,
     } = options;
 
     const connections = new Map();
@@ -34,7 +34,7 @@ class ConnectionManager {
       // 1. Remove "closed" listener.
       const closedListener = closedListeners.get(connection);
       closedListeners.delete(connection);
-      connection.removeListener('closed', closedListener);
+      connection.removeListener("closed", closedListener);
 
       // 2. Remove the Connection from the Map.
       connections.delete(connection.id);
@@ -47,7 +47,7 @@ class ConnectionManager {
       // 1. Add the "closed" listener.
       function closedListener() { deleteConnection(connection); }
       closedListeners.set(connection, closedListener);
-      connection.once('closed', closedListener);
+      connection.once("closed", closedListener);
 
       // 2. Add the Connection to the Map.
       connections.set(connection.id, connection);

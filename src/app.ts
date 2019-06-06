@@ -44,11 +44,13 @@ ts3.on('error', (err) => {
 socketServer.on('connection', (socket) => {
     socketConnections.push(socket);
     console.log('socket connected:');
-    console.log(socket);
+    // console.log(socket);
     socket.send('Websocket connection ready');
     socket.on('message', msg => {
         console.log(msg);
     });
 });
 
-export {ts3, app};
+const rtcApp = require('./rtc/rtcApp');
+
+export {ts3, app, rtcApp};
