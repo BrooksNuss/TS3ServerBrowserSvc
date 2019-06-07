@@ -39,7 +39,7 @@ rtcRouter.get('/connections/:id/local-description', (req, res) => {
     res.send(connection.toJSON().remoteDescription);
 });
 
-rtcRouter.get('/connections/:id/remote-description', (req, res) => {
+rtcRouter.post('/connections/:id/remote-description', (req, res) => {
     const {id} = req.params;
     const connection = rtcApp.connectionManager.getConnection(id);
     if (!connection) {

@@ -74,7 +74,7 @@ class WebRtcConnection extends Connection {
     peerConnection.addEventListener("iceconnectionstatechange", onIceConnectionStateChange);
 
     this.doOffer = async () => {
-      const offer = await peerConnection.createOffer();
+      const offer = await peerConnection.createOffer({offerToReceiveAudio: true});
       await peerConnection.setLocalDescription(offer);
       try {
         await waitUntilIceGatheringStateComplete(peerConnection, options);

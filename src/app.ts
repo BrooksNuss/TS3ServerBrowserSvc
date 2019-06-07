@@ -3,6 +3,7 @@ import 'ts3-nodejs-library';
 import * as socketIo from 'socket.io';
 import {ts3Config} from './credentials';
 import { setupTSListeners, registerTSEvents } from './socket/socketSetup';
+import bodyParser = require('body-parser');
 const TeamSpeak3 = require('ts3-nodejs-library');
 const cors = require('cors');
 const app = express();
@@ -15,6 +16,7 @@ let ts3Ready = false;
 const socketConnections: Array<SocketIO.Socket> = [];
 
 app.use(cors());
+app.use(bodyParser.json());
 
 app.use('/api/v1', require('./routes/base'));
 
