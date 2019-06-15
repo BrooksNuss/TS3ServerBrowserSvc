@@ -1,7 +1,7 @@
 import express from 'express';
 import 'ts3-nodejs-library';
 import * as socketIo from 'socket.io';
-import {ts3Config} from './credentials';
+import {ts3Config} from './config';
 import { setupTSListeners, registerTSEvents } from './socket/socketSetup';
 import bodyParser = require('body-parser');
 const TeamSpeak3 = require('ts3-nodejs-library');
