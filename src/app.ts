@@ -27,7 +27,6 @@ const server = app.listen( expressPort, () => {
 const socketServer = socketIo.default(server);
 
 ts3.on('ready', async () => {
-    // where all the rest of the magic happens
     try {
         ts3Ready = true;
         registerTSEvents(ts3);
@@ -46,7 +45,6 @@ ts3.on('error', (err) => {
 socketServer.on('connection', (socket) => {
     socketConnections.push(socket);
     console.log('socket connected:');
-    // console.log(socket);
     socket.send('Websocket connection ready');
     socket.on('message', msg => {
         console.log(msg);
