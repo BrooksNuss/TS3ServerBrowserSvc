@@ -66,6 +66,6 @@
   },
   "include": [
     "src/**/*",
-    "./credentials"
+    "./src/config"
   ]
 }
