@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "amd",
+        "sourceMap": true,
+        "watch": false,
+        "rootDir": "tssrc",
+        "outFile": "out/script.js",
+
+        "removeComments": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "alwaysStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        //,"noUnusedParameters": true
+        "strictPropertyInitialization": true,
+        "strictFunctionTypes": true,
+        "strict": true,
+
+        "jsx": "react",
+        "jsxFactory": "createElement"
+    }
+}

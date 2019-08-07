@@ -1,4 +1,4 @@
-import {spawn} from 'child_process';
+import {spawn, ChildProcessWithoutNullStreams} from 'child_process';
 import { Writable, Readable } from 'stream';
 const WebRtcConnectionManager = require('./connections/webrtcconnectionmanager.js');
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;
@@ -10,19 +10,13 @@ const connectionManager = WebRtcConnectionManager.create({beforeOffer});
 function beforeOffer(peerConnection: RTCPeerConnection) {
     // const clientReady = false;
     const transceiver = peerConnection.addTransceiver('audio');
-    startTSClient(peerConnection);
-    peerConnection.addEventListener('connectionstatechange', () => onConnectionStateChange(peerConnection));
-    return Promise.all([transceiver.sender.replaceTrack(transceiver.receiver.track)]);
-}
-
-function onConnectionStateChange(peerConnection: RTCPeerConnection) {
-    if (peerConnection.connectionState === 'closed' || peerConnection.connectionState === 'failed') {
-        
-    }
+    const client = startTSClient(peerConnection);
+    // return Promise.all([transceiver.sender.replaceTrack(transceiver.receiver.track)]);
 }
 
 function startTSClient(peerConnection: RTCPeerConnection) {
-    const tsClient = spawn(clientPath, ['TSWebClient', '/25']);
+    const tsClient = spawn(clientPath, ['TSWebClient', '', '/25']);
+    console.log(tsClient.pid);
     tsClient.on('error', (err) => {
         console.log('Error spawning process');
         console.error(err);
@@ -31,15 +25,38 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     const sink = new RTCAudioSink(peerConnection.getTransceivers()[0].receiver.track);
     // TODO create rtcaudiodata model
     sink.ondata = (data: any) => {
-        const buffer = new Buffer(Buffer.from(data.samples.buffer as ArrayBuffer));
-        (tsClient.stdin as Writable).write(buffer);
+        const buffer = Buffer.from(data.samples.buffer as ArrayBuffer);
+        if (tsClient && tsClient.stdin && (tsClient.stdin as any).readyState !== 'closed') {
+            console.log(data.samples);
+            (tsClient.stdin as Writable).write(buffer);
+        }
     };
     // read stdout and add data to an audio source then send that into the sender track
     const source = new RTCAudioSource(peerConnection.getSenders()[0].track);
     (tsClient.stdout as Readable).on('data', data => {
-        console.log(data);
-        console.log(source);
+        if (tsClient && tsClient.stdout && (tsClient.stdout as any).readyState !== 'closed') {
+            // console.log(data);
+        }
     });
+    tsClient.on('close', (code: number, signal: string) => {
+        console.log('CLOSE');
+        console.log(code);
+        console.log(signal);
+    });
+    tsClient.on('exit', (code: number, signal: string) => {
+        console.log('EXIT');
+        console.log(code);
+        console.log(signal);
+    });
+    peerConnection.addEventListener('connectionstatechange', () => {
+        if (peerConnection.connectionState === 'closed' || peerConnection.connectionState === 'failed') {
+            tsClient.stdout.destroy();
+            tsClient.stdin.end();
+            tsClient.kill();
+            sink.ondata = null;
+        }
+    });
+    return tsClient;
 }
 
 export {connectionManager};
