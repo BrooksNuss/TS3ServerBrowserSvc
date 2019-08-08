@@ -12,7 +12,7 @@ namespace NodeClient {
 		private bool running = false;
 		public TimeSpan sendCheckInterval = TimeSpan.FromMilliseconds(10);
 		private byte[] readBuffer = Array.Empty<byte>();
-		public int ReadBufferSize { get; set; } = 480;
+		public int ReadBufferSize { get; set; } = 960;
 		private Thread tickThread;
 
 		public TargetPipe(IAudioPassiveProducer inStream, IAudioPassiveConsumer outStream) {

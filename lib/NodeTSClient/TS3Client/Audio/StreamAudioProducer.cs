@@ -16,11 +16,13 @@ namespace TS3Client.Audio
 	{
 		private readonly Stream stream;
 		public event EventHandler HitEnd;
+		private int count = 0;
 
 		public int Read(byte[] buffer, int offset, int length, out Meta meta)
 		{
 			meta = default;
 			int read = stream.Read(buffer, offset, length);
+			this.count++;
 			if (read < length)
 				HitEnd?.Invoke(this, EventArgs.Empty);
 			return read;

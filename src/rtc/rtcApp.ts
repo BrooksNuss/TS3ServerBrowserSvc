@@ -3,7 +3,7 @@ import { Writable, Readable } from 'stream';
 const WebRtcConnectionManager = require('./connections/webrtcconnectionmanager.js');
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;
 const path = require('path');
-const clientPath = path.resolve(__dirname, '../../../TS3AudioBot/NodeTSClient/bin/Debug/NodeTSClient.exe');
+const clientPath = path.resolve(__dirname, '../../lib/NodeTSClient/NodeClient/bin/Debug/NodeClient.exe');
 
 const connectionManager = WebRtcConnectionManager.create({beforeOffer});
 
@@ -24,10 +24,12 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     // audio sink data to stream here
     const sink = new RTCAudioSink(peerConnection.getTransceivers()[0].receiver.track);
     // TODO create rtcaudiodata model
+    let count = 0;
     sink.ondata = (data: any) => {
         const buffer = Buffer.from(data.samples.buffer as ArrayBuffer);
-        if (tsClient && tsClient.stdin && (tsClient.stdin as any).readyState !== 'closed') {
+        if (tsClient && tsClient.stdin && (tsClient.stdin as any).readyState !== 'closed' && !tsClient.killed) {
             console.log(data.samples);
+            console.log(count++);
             (tsClient.stdin as Writable).write(buffer);
         }
     };

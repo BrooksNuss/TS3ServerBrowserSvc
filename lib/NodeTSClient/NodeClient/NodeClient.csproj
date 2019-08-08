@@ -41,10 +41,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="TS3Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Downloads\TS3AudioBot-master\TS3AudioBot-master\TS3Client\bin\Debug\net46\TS3Client.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="StreamAudioConsumer.cs" />
@@ -54,6 +50,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TS3Client\TS3Client.csproj">
+      <Project>{0eb99e9d-87e5-4534-a100-55d231c2b6a6}</Project>
+      <Name>TS3Client</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

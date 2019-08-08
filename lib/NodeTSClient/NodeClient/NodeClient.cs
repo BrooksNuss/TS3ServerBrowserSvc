@@ -32,6 +32,19 @@ namespace NodeClient
 			};
 			client.Connect(connectionConfig);
 			Stream stdin = Console.OpenStandardInput();
+			//byte[] readBuffer = Array.Empty<byte>();
+			//int ReadBufferSize = 960;
+			//while(stdin.CanRead) {
+			//	if (readBuffer.Length < ReadBufferSize)
+			//		readBuffer = new byte[ReadBufferSize];
+
+			//	int read = stdin.Read(readBuffer, 0, readBuffer.Length);
+			//	if (read == 0) {
+			//		return;
+			//	}
+
+			//	Console.WriteLine(readBuffer[0] << 8 | readBuffer[1]);
+			//}
 			Stream stdout = Console.OpenStandardOutput();
 			int ScaleBitrate(int value) => Math.Min(Math.Max(1, value), 255) * 1000;
 			// get audio stream and pipe it into target. Target will then use the client's sendAudio function.
@@ -39,7 +52,7 @@ namespace NodeClient
 			TargetPipe targetPipe = new TargetPipe(streamInPipe, client);
 			CheckActivePipe activePipe = new CheckActivePipe();
 			EncoderPipe encoderPipe = new EncoderPipe(Codec.OpusVoice) { Bitrate = ScaleBitrate(48) };
-			targetPipe.Chain(activePipe).Chain(encoderPipe).Chain(client);
+			targetPipe.Chain(encoderPipe).Chain(client);
 			// get audio from client's outStream
 			StreamAudioConsumer streamOutPipe = new StreamAudioConsumer(stdout);
 			client.OutStream = streamOutPipe;
