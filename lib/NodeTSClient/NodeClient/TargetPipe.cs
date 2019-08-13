@@ -10,7 +10,7 @@ namespace NodeClient {
 		public IAudioPassiveConsumer OutStream { get; set; }
 		public IAudioPassiveProducer InStream { get; set; }
 		private bool running = false;
-		public TimeSpan sendCheckInterval = TimeSpan.FromMilliseconds(10);
+		public TimeSpan sendCheckInterval = TimeSpan.FromMilliseconds(5);
 		private byte[] readBuffer = Array.Empty<byte>();
 		public int ReadBufferSize { get; set; } = 960;
 		private Thread tickThread;
