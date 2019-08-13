@@ -39,7 +39,8 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     };
     // read stdout and add data to an audio source then send that into the sender track
     const source = new RTCAudioSource(peerConnection.getSenders()[0].track);
-    const samples = new Uint16Array(480);
+    // uint8 array of double size because the data coming back is uint8s
+    const samples = new Uint8Array(960);
     let position = 0;
     (tsClient.stdout as Readable).on('data', (data: Uint8Array) => {
         if (tsClient && tsClient.stdout && (tsClient.stdout as any).readyState !== 'closed') {
