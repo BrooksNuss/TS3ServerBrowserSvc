@@ -40,14 +40,31 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     // read stdout and add data to an audio source then send that into the sender track
     const source = new RTCAudioSource(peerConnection.getSenders()[0].track);
     // uint8 array of double size because the data coming back is uint8s
-    const samples = new Uint8Array(960);
-    let position = 0;
+    const samples = {buffer: new Uint8Array(960), sampleRate: 48000};
+    let currentIndex = 0;
     (tsClient.stdout as Readable).on('data', (data: Uint8Array) => {
         if (tsClient && tsClient.stdout && (tsClient.stdout as any).readyState !== 'closed') {
             console.log(data);
-            let lengthDiff = samples.byteLength - data.byteLength;
-            // if ()
-            // source.onData(data.buffer);
+            const newIndex = currentIndex + data.byteLength;
+            // needs testing to make sure there are no off by ones
+
+            if (newIndex < samples.buffer.byteLength) {
+                samples.buffer.set(data, currentIndex);
+                currentIndex += data.byteLength;
+            } else if (newIndex > samples.buffer.byteLength) {
+                // write until samples is full, send, then write the rest and continue
+                const remainingSpace = samples.buffer.byteLength - newIndex;
+                const writable = data.slice(0, remainingSpace);
+                const leftover = data.slice(remainingSpace);
+                samples.buffer.set(writable, currentIndex);
+                source.onData({samples: Int16Array.from(samples.buffer).buffer, sampleRate: 48000});
+                samples.buffer.set(leftover);
+                currentIndex = leftover.byteLength;
+            } else {
+                samples.buffer.set(data, currentIndex);
+                source.onData({samples: Int16Array.from(samples.buffer).buffer, sampleRate: 48000});
+                currentIndex = 0;
+            }
         }
     });
     tsClient.on('close', (code: number, signal: string) => {
