@@ -75,6 +75,8 @@ class WebRtcConnection extends Connection {
 
     this.doOffer = async () => {
       const offer = await peerConnection.createOffer({offerToReceiveAudio: true});
+      offer.sdp = offer.sdp.replace('a=fmtp:111', 'a=fmtp:111 stereo=0; sprop-stereo=0;')
+      
       await peerConnection.setLocalDescription(offer);
       try {
         await waitUntilIceGatheringStateComplete(peerConnection, options);

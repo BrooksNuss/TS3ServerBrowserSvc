@@ -11,7 +11,6 @@ namespace NodeClient
 	{
 		static void Main(string[] args)
 		{
-			//Thread.Sleep(20000);
 			Ts3FullClient client = new Ts3FullClient(TS3Client.EventDispatchType.DoubleThread);
 			VersionSign version = VersionSign.VER_WIN_3_2_3;
 			IdentityData identity;
@@ -27,35 +26,24 @@ namespace NodeClient
 				Address = "3.213.117.224",
 				Identity = identity,
 				VersionSign = version,
-				DefaultChannel = "/25",
+				DefaultChannel = "/26",
 				DefaultChannelPassword = null,
 			};
 			client.Connect(connectionConfig);
 			Stream stdin = Console.OpenStandardInput();
-			//byte[] readBuffer = Array.Empty<byte>();
-			//int ReadBufferSize = 960;
-			//while(stdin.CanRead) {
-			//	if (readBuffer.Length < ReadBufferSize)
-			//		readBuffer = new byte[ReadBufferSize];
-
-			//	int read = stdin.Read(readBuffer, 0, readBuffer.Length);
-			//	if (read == 0) {
-			//		return;
-			//	}
-
-			//	Console.WriteLine(readBuffer[0] << 8 | readBuffer[1]);
-			//}
 			Stream stdout = Console.OpenStandardOutput();
 			int ScaleBitrate(int value) => Math.Min(Math.Max(1, value), 255) * 1000;
-			// get audio stream and pipe it into target. Target will then use the client's sendAudio function.
 			StreamAudioProducer streamInPipe = new StreamAudioProducer(stdin);
 			TargetPipe targetPipe = new TargetPipe(streamInPipe, client);
 			CheckActivePipe activePipe = new CheckActivePipe();
 			EncoderPipe encoderPipe = new EncoderPipe(Codec.OpusVoice) { Bitrate = ScaleBitrate(48) };
 			targetPipe.Chain(encoderPipe).Chain(client);
-			// get audio from client's outStream
+			AudioPacketReader packetReader = new AudioPacketReader();
+			DecoderPipe decoderPipe = new DecoderPipe();
 			StreamAudioConsumer streamOutPipe = new StreamAudioConsumer(stdout);
-			client.OutStream = streamOutPipe;
+			client.OutStream = packetReader;
+			packetReader.Chain(decoderPipe);
+			decoderPipe.Chain(streamOutPipe);
 		}
 	}
 }

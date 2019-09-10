@@ -8,13 +8,17 @@ const clientPath = path.resolve(__dirname, '../../lib/NodeTSClient/NodeClient/bi
 const connectionManager = WebRtcConnectionManager.create({beforeOffer});
 
 function beforeOffer(peerConnection: RTCPeerConnection) {
-    // const clientReady = false;
     const transceiver = peerConnection.addTransceiver('audio');
     const client = startTSClient(peerConnection);
-    // return Promise.all([transceiver.sender.replaceTrack(transceiver.receiver.track)]);
 }
 
 function startTSClient(peerConnection: RTCPeerConnection) {
+    let dataChannel: RTCDataChannel;
+    // const sampleBuffer = new Uint8Array(960);
+    let currentIndex = 0;
+    let source: any;
+    let packetCount = 0;
+    const MAX_STREAM_BYTELENGTH = 960;
     const tsClient = spawn(clientPath, ['TSWebClient', '', '/25']);
     console.log(tsClient.pid);
     tsClient.on('error', (err) => {
@@ -26,7 +30,6 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     // audio sink data to stream here
     const sink = new RTCAudioSink(peerConnection.getTransceivers()[0].receiver.track);
     // TODO create rtcaudiodata model
-    // let count = 0;
     sink.ondata = (data: any) => {
         if (!muted) {
             const buffer = Buffer.from(data.samples.buffer as ArrayBuffer);
@@ -43,36 +46,46 @@ function startTSClient(peerConnection: RTCPeerConnection) {
     peerConnection.addEventListener('connectionstatechange', () => {
         if (peerConnection.connectionState === 'connected' && !connected) {
             connected = true;
-            const source = new RTCAudioSource();
+            source = new RTCAudioSource();
             const track = source.createTrack();
             peerConnection.getSenders()[0].replaceTrack(track);
-            // uint8 array of double size because the data coming back is uint8s
-            const samples = new Uint8Array(960);
-            let currentIndex = 0;
+            let remainingData = 0;
             (tsClient.stdout as Readable).on('data', (data: Uint8Array) => {
-                if (tsClient && tsClient.stdout && (tsClient.stdout as any).readyState !== 'closed') {
-                    const newIndex = currentIndex + data.byteLength;
-                    // needs testing to make sure there are no off by ones
-                    if (newIndex < samples.buffer.byteLength) {
-                        samples.set(data, currentIndex);
-                        currentIndex += data.byteLength;
-                    } else if (newIndex > samples.buffer.byteLength) {
-                        // write until samples is full, send, then write the rest and continue
-                        const remainingSpace = samples.buffer.byteLength - newIndex;
-                        const writable = data.slice(0, remainingSpace);
-                        const leftover = data.slice(remainingSpace);
-                        samples.set(writable, currentIndex);
-                        const int16Samples = convertUInt8ToInt16(samples);
-                        source.onData({samples: int16Samples.buffer, sampleRate: 48000});
-                        console.log(int16Samples);
-                        samples.set(leftover);
-                        currentIndex = leftover.byteLength;
-                    } else {
-                        samples.set(data, currentIndex);
-                        const int16Samples = convertUInt8ToInt16(samples);
-                        source.onData({samples: int16Samples.buffer, sampleRate: 48000});
-                        console.log(int16Samples);
-                        currentIndex = 0;
+                // remove packet headers
+                const headers = data.slice(0, 2);
+                const audioBuffer = Uint8Array.from(data.slice(2));
+                remainingData = audioBuffer.byteLength;
+                currentIndex = 0;
+                while (remainingData > 0) {
+                    try {
+                        if (remainingData >= MAX_STREAM_BYTELENGTH) {
+                            // dataChannel.send(`{"type": "talkingClient", "data": "${headers[2] + headers[3]}"}`);
+                            source.onData(
+                                {
+                                    samples: audioBuffer.buffer.slice(currentIndex, MAX_STREAM_BYTELENGTH + currentIndex),
+                                    sampleRate: 48000
+                                }
+                            );
+                            packetCount++;
+                            remainingData -= MAX_STREAM_BYTELENGTH;
+                            currentIndex += MAX_STREAM_BYTELENGTH;
+                        } else {
+                            // dataChannel.send(`{"type": "talkingClient", "data": "${headers[2] + headers[3]}"}`);
+                            audioBuffer.set(audioBuffer.slice(currentIndex));
+                            audioBuffer.fill(0, currentIndex);
+                            source.onData(
+                                {
+                                    samples: audioBuffer.buffer.slice(currentIndex, audioBuffer.byteLength),
+                                    sampleRate: 48000
+                                }
+                            );
+                            packetCount++;
+                            remainingData = 0;
+                            currentIndex = 0;
+                        }
+                    } catch (e) {
+                        console.log(e);
+                        remainingData = 0;
                     }
                 }
             });
@@ -97,7 +110,7 @@ function startTSClient(peerConnection: RTCPeerConnection) {
                     sink.ondata = null;
         }
     });
-    const dataChannel = peerConnection.createDataChannel('dataChannel');
+    dataChannel = peerConnection.createDataChannel('dataChannel');
     dataChannel.onopen = () => {
 
     };
@@ -111,15 +124,6 @@ function startTSClient(peerConnection: RTCPeerConnection) {
         }
     };
     return tsClient;
-}
-
-function convertUInt8ToInt16(samples: Uint8Array): Int16Array {
-    const view = new DataView(samples.buffer);
-    const int16Samples = new Int16Array(view.byteLength / 2);
-    for (let i = 0; i < view.byteLength - 2; i += 2) {
-        int16Samples.set([view.getInt16(i)], i / 2);
-    }
-    return int16Samples;
 }
 
 export {connectionManager};
