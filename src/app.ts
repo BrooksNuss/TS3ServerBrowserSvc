@@ -26,7 +26,7 @@ app.use('/api/v1', require('./routes/base'));
 const httpsServer = https.createServer(httpsCredentials, app);
 httpsServer.listen(expressPort, () => {
     console.log( `server started at https://localhost:${ expressPort }` );
-})
+});
 const socketServer = socketIo(httpsServer);
 
 ts3.on('ready', async () => {
