@@ -8,11 +8,11 @@ const rtcRouter = express.Router();
  */
 rtcRouter.post('/connections', (req, res) => {
     try {
-        const connection = rtcApp.connectionManager.createConnection().then((conn: any) => {
-            res.send(conn);
+        rtcApp.createConnection().then((offer) => {
+            res.send(offer);
+        }, err => {
+            console.log(err);
         });
-        console.log(rtcApp);
-        console.log(rtcApp.connectionManager);
     } catch (error) {
         console.error(error);
         res.sendStatus(500);
@@ -21,36 +21,38 @@ rtcRouter.post('/connections', (req, res) => {
 
 rtcRouter.delete('/connections/:id', (req, res) => {
     const {id} = req.params;
-    const connection = rtcApp.connectionManager.getConnection(id);
-    if (!connection) {
+    // const connection = rtcApp.getConnection(id);
+    const success = rtcApp.deleteConnection(id);
+    if (!success) {
         res.sendStatus(404);
         return;
     }
-    res.send(connection);
+    res.send(success);
 });
 
-rtcRouter.get('/connections/:id/local-description', (req, res) => {
-    const {id} = req.params;
-    const connection = rtcApp.connectionManager.getConnection(id);
-    if (!connection) {
-        res.sendStatus(404);
-        return;
-    }
-    res.send(connection.toJSON().remoteDescription);
-});
+// rtcRouter.get('/connections/:id/local-description', (req, res) => {
+//     const {id} = req.params;
+//     const connection = rtcApp.getConnection(id);
+//     if (!connection) {
+//         res.sendStatus(404);
+//         return;
+//     }
+//     res.send(connection.toJSON().remoteDescription);
+// });
 
 rtcRouter.post('/connections/:id/remote-description', (req, res) => {
     const {id} = req.params;
-    const connection = rtcApp.connectionManager.getConnection(id);
+    const connection = rtcApp.getConnection(id);
     if (!connection) {
         res.sendStatus(404);
         return;
     }
     try {
-        connection.applyAnswer(req.body);
-        res.send(connection.toJSON().remoteDescription);
+        rtcApp.applyAnswer(connection, req.body).then(answer => {
+            res.send(answer);
+        });
     } catch (error) {
-        res.sendStatus(404);
+        res.sendStatus(500);
     }
 });
 

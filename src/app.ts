@@ -3,6 +3,8 @@ import 'ts3-nodejs-library';
 import {ts3Config} from './config';
 import { setupTSListeners, registerTSEvents } from './socket/socketSetup';
 import bodyParser = require('body-parser');
+import { TsClientConnectionManager } from './rtc/tsClient/tsClientConnectionManager';
+const path = require('path');
 const socketIo = require('socket.io');
 const TeamSpeak3 = require('ts3-nodejs-library');
 const cors = require('cors');
@@ -11,8 +13,8 @@ const expressPort = 8080;
 const socketPort = 8081;
 const fs = require('fs');
 const https = require('https');
-const privateKey = fs.readFileSync('../server.key', 'utf8');
-const cert = fs.readFileSync('../server.crt', 'utf8');
+const privateKey = fs.readFileSync(path.resolve(__dirname, '../../server.key'), 'utf8');
+const cert = fs.readFileSync(path.resolve(__dirname, '../../server.crt'), 'utf8');
 const httpsCredentials = {key: privateKey, cert};
 const ts3: TeamSpeak3 = new TeamSpeak3(ts3Config);
 let ts3Ready = false;
@@ -54,6 +56,6 @@ socketServer.on('connection', (socket: any) => {
     });
 });
 
-const rtcApp = require('./rtc/rtcApp');
+const rtcApp = new TsClientConnectionManager();
 
 export {ts3, app, rtcApp};

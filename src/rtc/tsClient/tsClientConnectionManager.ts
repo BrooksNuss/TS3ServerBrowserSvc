@@ -1,13 +1,17 @@
-const uuidv4 = require('uuid/v4');
 import { TsClientConnection } from './tsClientConnection';
+import { fork, ChildProcess } from 'child_process';
+import { IPCMessage } from '../models/IPCMessage';
+const uuidv4 = require('uuid/v4');
+const path = require('path');
 
-export class WebRtcConnectionManager {
-    public connections: Map<string, TsClientConnection>;
-    public closeListeners: Map<TsClientConnection, (...params: any[]) => any>;
+export class TsClientConnectionManager {
+    public connections: Map<string, ChildProcess>;
+    // public closeListeners: Map<TsClientConnection, (...params: any[]) => any>;
+    private childPath = path.resolve(__dirname, './tsClientConnection.js');
 
-    constructor(options: any) {
+    constructor() {
         this.connections = new Map();
-        this.closeListeners = new Map();
+        // this.closeListeners = new Map();
     }
 
     // static create(options: any) {
@@ -26,32 +30,78 @@ export class WebRtcConnectionManager {
         return id;
     }
 
-    async createConnection() {
+    async createConnection(): Promise<RTCSessionDescriptionInit> {
         const id = this.createId();
-        const connection = new TsClientConnection(id);
-        const listener = (conn: TsClientConnection) => this.deleteConnection(conn);
-        this.closeListeners.set(connection, listener);
-        connection.once('closed', listener);
-
-        // 2. Add the Connection to the Map.
-        this.connections.set(connection.id, connection);
-        await connection.webRtcConnection.doOffer();
-        return connection;
+        const connectionProcess = fork(this.childPath, [id], {execArgv: ['--inspect-brk=40809'], silent: true});
+        connectionProcess.on('close', () => {
+            this.connections.delete(id);
+        });
+        connectionProcess.on('error', err => {
+            console.log(err);
+        });
+        connectionProcess.stderr!.on('data', (data) => {
+            console.log('stderr: ' + data);
+        });
+        connectionProcess.stdout!.on('data', (data) => {
+            console.log('stdout: ' + data);
+        });
+        this.connections.set(id, connectionProcess);
+        this.setupIPCListener(connectionProcess);
+        // connectionProcess.on('message', (msg: {type: string, data: string}) => {
+        //     switch (msg.type) {
+        //         case 'ready': {
+        //             if (msg.data) {
+        //                 return connectionProcess;
+        //             } else {
+        //                 return null;
+        //             }
+        //         }
+        //     }
+        // });
+        connectionProcess.once('ready', (message: IPCMessage) => {
+            connectionProcess.send({type: 'doOffer'});
+        });
+        return await new Promise((resolve, reject) => {
+            connectionProcess.once('doOffer', (message: IPCMessage<RTCSessionDescriptionInit>) => {
+                resolve(message.data);
+            });
+            connectionProcess.once('error', (message: IPCMessage) => {
+                reject(message.data);
+            });
+            connectionProcess.once('close', reject);
+        });
     }
 
-    public deleteConnection(connection: TsClientConnection) {
-        const listener = this.closeListeners.get(connection);
-        this.closeListeners.delete(connection);
+    async applyAnswer(connectionProcess: ChildProcess, answer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
+        connectionProcess.send({type: 'answer', data: answer} as IPCMessage<RTCSessionDescriptionInit>);
+        return await new Promise((resolve, reject) => {
+            connectionProcess.once('answer', (message: IPCMessage<RTCSessionDescriptionInit>) => {
+                resolve(message.data);
+            });
+            connectionProcess.once('close', reject);
+            connectionProcess.once('error', (message: IPCMessage) => {
+                reject(message.data);
+            });
+        });
+    }
+
+    setupIPCListener(process: ChildProcess) {
+        
+    }
+
+    public deleteConnection(connection: TsClientConnection): boolean {
+        // const listener = this.closeListeners.get(connection);
+        // this.closeListeners.delete(connection);
         // connection.removeListener('closed', listener);
         connection.removeAllListeners('closed');
-        this.connections.delete(connection.id);
+        return this.connections.delete(connection.id);
     }
 
-    getConnection(id: string): TsClientConnection | undefined {
+    getConnection(id: string): ChildProcess | undefined {
         return this.connections.get(id);
     }
 
-    getConnections(): TsClientConnection[] {
+    getConnections(): ChildProcess[] {
         return [...this.connections.values()];
     }
 
@@ -59,7 +109,7 @@ export class WebRtcConnectionManager {
         return uuidv4();
     }
 
-    toJSON() {
-        return this.getConnections().map(connection => connection.webRtcConnection.toJSON());
-    }
+    // toJSON() {
+    //     return this.getConnections().map(connection => connection.webRtcConnection.toJSON());
+    // }
 }

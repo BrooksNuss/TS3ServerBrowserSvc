@@ -1,6 +1,10 @@
+import { IPCMessage } from '../models/IPCMessage';
+
 const WebRTCPeerConnection = require('wrtc').RTCPeerConnection;
+const EventEmitter = require('events');
 
 export class WebRtcConnection extends EventEmitter {
+    public id: string;
     public state: string;
     private timeToConnect = 10000;
     private timeToHostCandidates = 3000;
@@ -23,6 +27,7 @@ export class WebRtcConnection extends EventEmitter {
 
     constructor(id: string) {
         super();
+        this.id = id;
         this.state = 'open';
         this.peerConnection = new WebRTCPeerConnection({
             sdpSemantics: 'unified-plan',
@@ -43,7 +48,7 @@ export class WebRtcConnection extends EventEmitter {
         this.peerConnection.addEventListener('iceconnectionstatechange', this.onIceConnectionStateChange);
     }
 
-    private onIceConnectionStateChange() {
+    private onIceConnectionStateChange = () => {
         if (this.peerConnection.iceConnectionState === 'connected'
             || this.peerConnection.iceConnectionState === 'completed') {
             if (this.connectTimer) {
@@ -73,14 +78,30 @@ export class WebRtcConnection extends EventEmitter {
         await this.peerConnection.setLocalDescription(offer);
         try {
             await this.waitUntilIceGatheringStateComplete();
+            if (process.send) {
+                const msg: IPCMessage<RTCSessionDescriptionInit> = {type: 'doOffer', data: offer};
+                process.send(msg);
+            }
         } catch (error) {
             this.close();
-            throw error;
+            if (process.send) {
+                const msg: IPCMessage<RTCSessionDescriptionInit> = {type: 'error', data: error};
+                process.send(msg);
+            }
         }
     }
 
     async applyAnswer(answer: RTCSessionDescriptionInit) {
-        await this.peerConnection.setRemoteDescription(answer);
+        try {
+            await this.peerConnection.setRemoteDescription(answer);
+            if (process.send) {
+                process.send({type: 'answer', data: this.remoteDescription} as IPCMessage<RTCSessionDescriptionInit>);
+            }
+        } catch (error) {
+            if (process.send) {
+                process.send({type: 'error', data: error} as IPCMessage);
+            }
+        }
     }
 
     close() {
@@ -100,6 +121,7 @@ export class WebRtcConnection extends EventEmitter {
 
     toJSON() {
         return {
+            id: this.id,
             state: this.state,
             iceConnectionState: this.iceConnectionState,
             localDescription: this.localDescription,

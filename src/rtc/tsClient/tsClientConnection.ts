@@ -1,13 +1,16 @@
 import { WebRtcConnection } from '../connections/webrtcConnection';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { Writable, Readable } from 'stream';
+import { IPCMessage } from '../models/IPCMessage';
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;
+const EventEmitter = require('events');
+const path = require('path');
 
 export class TsClientConnection extends EventEmitter {
     public id: string;
     public webRtcConnection: WebRtcConnection;
     public tsClient: ChildProcessWithoutNullStreams;
-    private clientPath = '../../lib/NodeTSClient/NodeClient/bin/Debug/NodeClient.exe';
+    private clientPath = path.resolve(__dirname, '../../../lib/NodeTSClient/NodeClient/bin/Debug/NodeClient.exe');
     private dataChannel: RTCDataChannel;
     private peerConnection: RTCPeerConnection;
     private MAX_OUTSTREAM_BYTELENGTH = 960;
@@ -19,12 +22,22 @@ export class TsClientConnection extends EventEmitter {
     constructor(id: string) {
         super();
         this.id = id;
+        this.setupIPCListener();
         this.webRtcConnection = new WebRtcConnection(id);
+        if (process.send) {
+            process.send({type: 'ready'} as IPCMessage);
+        }
         this.webRtcConnection.peerConnection.addTransceiver('audio');
         this.peerConnection = this.webRtcConnection.peerConnection;
         this.dataChannel = this.webRtcConnection.peerConnection.createDataChannel('dataChannel');
         this.tsClient = spawn(this.clientPath, ['TSWebClient', '', '/25']);
         this.setupTsClient();
+    }
+
+    setupIPCListener() {
+        process.on('message', (msg: IPCMessage) => {
+            console.log('message');
+        });
     }
 
     setupTsClient() {
@@ -103,11 +116,12 @@ export class TsClientConnection extends EventEmitter {
         };
     }
 
-    private rtcConnectionListener() {
+    private rtcConnectionListener = () => {
         if (this.peerConnection.connectionState === 'connected' && !this.rtcConnected) {
             this.rtcConnected = true;
             this.setupAudioInput();
             this.setupAudioOutput();
+            this.setupDataChannel();
             this.tsClient.on('close', (code: number, signal: string) => {
                 console.log('CLOSE');
                 console.log(code);
@@ -126,7 +140,16 @@ export class TsClientConnection extends EventEmitter {
                     this.tsClient.stdout.destroy();
                     this.tsClient.stdin.end();
                     this.tsClient.kill();
-                    this.sink.ondata = null;
+                    if (this.sink) {
+                        this.sink.ondata = null;
+                    }
         }
     }
+
+    public toJSON() {
+        return this.webRtcConnection.toJSON();
+    }
 }
+
+// REQUIRED FOR STARTING AS A CHILD PROCESS
+new TsClientConnection(process.argv[2]);

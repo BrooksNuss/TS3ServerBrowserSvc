@@ -56,8 +56,8 @@ namespace TS3Client.Audio
 					opusVoiceDecoder = opusVoiceDecoder ?? OpusDecoder.Create(48000, 1);
 					var decodedData = opusVoiceDecoder.Decode(data, decodedBuffer.AsSpan(0, decodedBuffer.Length / 2));
 					int dataLength = decodedData.Length;
-					if (!AudioTools.TryMonoToStereo(decodedBuffer, ref dataLength))
-						return;
+					//if (!AudioTools.TryMonoToStereo(decodedBuffer, ref dataLength))
+					//	return;
 					OutStream?.Write(decodedBuffer.AsSpan(0, dataLength), meta);
 				}
 				break;
