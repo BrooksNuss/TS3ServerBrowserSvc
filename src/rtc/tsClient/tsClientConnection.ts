@@ -36,7 +36,10 @@ export class TsClientConnection extends EventEmitter {
 
     setupIPCListener() {
         process.on('message', (msg: IPCMessage) => {
-            console.log('message');
+            switch (msg.type) {
+                case 'doOffer': this.webRtcConnection.doOffer(); break;
+                case 'answer': this.webRtcConnection.applyAnswer(msg.data); break;
+            }
         });
     }
 

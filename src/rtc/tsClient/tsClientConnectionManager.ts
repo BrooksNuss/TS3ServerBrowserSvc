@@ -32,7 +32,7 @@ export class TsClientConnectionManager {
 
     async createConnection(): Promise<RTCSessionDescriptionInit> {
         const id = this.createId();
-        const connectionProcess = fork(this.childPath, [id], {execArgv: ['--inspect-brk=40809'], silent: true});
+        const connectionProcess = fork(this.childPath, [id], {execArgv: ['--inspect-brk'], silent: true});
         connectionProcess.on('close', () => {
             this.connections.delete(id);
         });
@@ -47,24 +47,19 @@ export class TsClientConnectionManager {
         });
         this.connections.set(id, connectionProcess);
         this.setupIPCListener(connectionProcess);
-        // connectionProcess.on('message', (msg: {type: string, data: string}) => {
-        //     switch (msg.type) {
-        //         case 'ready': {
-        //             if (msg.data) {
-        //                 return connectionProcess;
-        //             } else {
-        //                 return null;
-        //             }
-        //         }
-        //     }
-        // });
-        connectionProcess.once('ready', (message: IPCMessage) => {
-            connectionProcess.send({type: 'doOffer'});
+        connectionProcess.once('message', (message: IPCMessage) => {
+            if (message.type === 'ready') {
+                connectionProcess.send({type: 'doOffer'});
+            }
         });
         return await new Promise((resolve, reject) => {
-            connectionProcess.once('doOffer', (message: IPCMessage<RTCSessionDescriptionInit>) => {
-                resolve(message.data);
-            });
+            function offerListener(message: IPCMessage<RTCSessionDescriptionInit>) {
+                if (message.type === 'doOffer') {
+                    resolve(message.data);
+                    connectionProcess.removeListener('message', offerListener);
+                }
+            }
+            connectionProcess.on('message', offerListener);
             connectionProcess.once('error', (message: IPCMessage) => {
                 reject(message.data);
             });
@@ -75,8 +70,10 @@ export class TsClientConnectionManager {
     async applyAnswer(connectionProcess: ChildProcess, answer: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
         connectionProcess.send({type: 'answer', data: answer} as IPCMessage<RTCSessionDescriptionInit>);
         return await new Promise((resolve, reject) => {
-            connectionProcess.once('answer', (message: IPCMessage<RTCSessionDescriptionInit>) => {
-                resolve(message.data);
+            connectionProcess.once('message', (message: IPCMessage<RTCSessionDescriptionInit>) => {
+                if (message.type === 'answer') {
+                    resolve(message.data);
+                }
             });
             connectionProcess.once('close', reject);
             connectionProcess.once('error', (message: IPCMessage) => {
@@ -86,7 +83,11 @@ export class TsClientConnectionManager {
     }
 
     setupIPCListener(process: ChildProcess) {
-        
+        process.on('message', (msg: IPCMessage) => {
+            switch (msg.type) {
+                // case 'doOffer':
+            }
+        });
     }
 
     public deleteConnection(connection: TsClientConnection): boolean {

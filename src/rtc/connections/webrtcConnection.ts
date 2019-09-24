@@ -1,4 +1,4 @@
-import { IPCMessage } from '../models/IPCMessage';
+import { IPCMessage, RTCSessionDescriptionOffer } from '../models/IPCMessage';
 
 const WebRTCPeerConnection = require('wrtc').RTCPeerConnection;
 const EventEmitter = require('events');
@@ -79,7 +79,7 @@ export class WebRtcConnection extends EventEmitter {
         try {
             await this.waitUntilIceGatheringStateComplete();
             if (process.send) {
-                const msg: IPCMessage<RTCSessionDescriptionInit> = {type: 'doOffer', data: offer};
+                const msg: IPCMessage<RTCSessionDescriptionOffer> = {type: 'doOffer', data: {localDescription: offer, id: this.id}};
                 process.send(msg);
             }
         } catch (error) {
