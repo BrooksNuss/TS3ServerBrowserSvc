@@ -4,6 +4,6 @@ export interface IPCMessage<T = any> {
 }
 
 export interface RTCSessionDescriptionOffer {
-    localDescription: RTCSessionDescriptionInit;
+    localDescription: RTCSessionDescription | null;
     id: string;
 }

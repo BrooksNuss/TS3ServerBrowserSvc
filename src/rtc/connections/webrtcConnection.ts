@@ -72,14 +72,14 @@ export class WebRtcConnection extends EventEmitter {
 
     async doOffer() {
         const offer = await this.peerConnection.createOffer({offerToReceiveAudio: true});
-        if (offer.sdp) {
-            offer.sdp = offer.sdp.replace('a=fmtp:111', 'a=fmtp:111 stereo=0; sprop-stereo=0;');
-        }
         await this.peerConnection.setLocalDescription(offer);
         try {
             await this.waitUntilIceGatheringStateComplete();
             if (process.send) {
-                const msg: IPCMessage<RTCSessionDescriptionOffer> = {type: 'doOffer', data: {localDescription: offer, id: this.id}};
+                const msg: IPCMessage<RTCSessionDescriptionOffer> = {
+                    type: 'doOffer',
+                    data: {localDescription: this.peerConnection.localDescription, id: this.id}
+                };
                 process.send(msg);
             }
         } catch (error) {
