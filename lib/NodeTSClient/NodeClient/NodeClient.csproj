@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncStreamAudioProducer.cs" />
     <Compile Include="StreamAudioConsumer.cs" />
     <Compile Include="TargetPipe.cs" />
     <Compile Include="NodeClient.cs" />
