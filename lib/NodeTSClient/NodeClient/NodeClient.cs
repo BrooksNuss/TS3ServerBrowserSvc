@@ -33,11 +33,11 @@ namespace NodeClient
 			Stream stdin = Console.OpenStandardInput();
 			Stream stdout = Console.OpenStandardOutput();
 			int ScaleBitrate(int value) => Math.Min(Math.Max(1, value), 255) * 1000;
-			StreamAudioProducer streamInPipe = new StreamAudioProducer(stdin);
-			TargetPipe targetPipe = new TargetPipe(streamInPipe, client);
 			CheckActivePipe activePipe = new CheckActivePipe();
+			AsyncStreamAudioProducer streamInPipe = new AsyncStreamAudioProducer(stdin, activePipe);
 			EncoderPipe encoderPipe = new EncoderPipe(Codec.OpusVoice) { Bitrate = ScaleBitrate(48) };
-			targetPipe.Chain(encoderPipe).Chain(client);
+			TargetPipe targetPipe = new TargetPipe(encoderPipe, client);
+			activePipe.Chain(targetPipe).Chain(encoderPipe).Chain(client);
 			AudioPacketReader packetReader = new AudioPacketReader();
 			DecoderPipe decoderPipe = new DecoderPipe();
 			StreamAudioConsumer streamOutPipe = new StreamAudioConsumer(stdout);

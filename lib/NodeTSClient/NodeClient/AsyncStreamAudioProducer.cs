@@ -4,15 +4,15 @@ namespace NodeClient {
 	using TS3Client.Audio;
 	using TS3Client;
 	class AsyncStreamAudioProducer: IAudioActiveProducer {
-		private readonly Stream stream;
+		private readonly Stream inStream;
 		private bool running = false;
 		Meta meta = new Meta();
 		public IAudioPassiveConsumer OutStream { get; set; }
 		private byte[] readBuffer = Array.Empty<byte>();
 		public int ReadBufferSize = 960;
 
-		public AsyncStreamAudioProducer(Stream stream) {
-			this.stream = stream;
+		public AsyncStreamAudioProducer(Stream inStream, IAudioPassiveConsumer outStream) {
+			this.inStream = inStream;
 			readBuffer = new byte[ReadBufferSize];
 			running = true;
 			meta.Codec = Codec.OpusVoice;
@@ -23,8 +23,8 @@ namespace NodeClient {
 
 		async private void Initialize() {
 			while (this.running) {
-				await stream.ReadAsync(readBuffer, 0, ReadBufferSize);
-				this.OutStream.Write(readBuffer.AsSpan(), meta);
+				await inStream.ReadAsync(readBuffer, 0, ReadBufferSize);
+				OutStream.Write(readBuffer.AsSpan(), meta);
 			}
 		}
 	}
