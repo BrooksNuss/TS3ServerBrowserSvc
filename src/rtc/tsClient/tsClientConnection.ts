@@ -1,7 +1,9 @@
 import { WebRtcConnection } from '../connections/webrtcConnection';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { Writable, Readable } from 'stream';
-import { IPCMessage } from '../models/IPCMessage';
+import { IPCMessage, TSCommand } from '../models/IPCMessage';
+import { IPC } from 'node-ipc';
+import { ts3Config } from '../../config'
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;
 const EventEmitter = require('events');
 const path = require('path');
@@ -18,6 +20,7 @@ export class TsClientConnection extends EventEmitter {
     private rtcConnected = false;
     private sink: any;
     private source: any;
+    private ipc = new IPC();
 
     constructor(id: string) {
         super();
@@ -30,7 +33,8 @@ export class TsClientConnection extends EventEmitter {
         this.webRtcConnection.peerConnection.addTransceiver('audio');
         this.peerConnection = this.webRtcConnection.peerConnection;
         this.dataChannel = this.webRtcConnection.peerConnection.createDataChannel('dataChannel');
-        this.tsClient = spawn(this.clientPath, ['TSWebClient', '', '/25']);
+        // get some of this from the ui, and the environment constants from the config
+        this.tsClient = spawn(this.clientPath, [id, 'TSWebClient', '', '/25', '', ts3Config.host, ts3Config.password]);
         this.setupTsClient();
     }
 
@@ -45,6 +49,9 @@ export class TsClientConnection extends EventEmitter {
 
     setupTsClient() {
         this.peerConnection.addEventListener('connectionstatechange', this.rtcConnectionListener);
+        this.ipc.config.id = this.id;
+        this.ipc.serve(this.id);
+        this.ipc.server.start();
     }
 
     setupAudioInput() {

@@ -13,6 +13,7 @@ namespace NodeClient {
 
 		public AsyncStreamAudioProducer(Stream inStream, IAudioPassiveConsumer outStream) {
 			this.inStream = inStream;
+			this.OutStream = outStream;
 			readBuffer = new byte[ReadBufferSize];
 			running = true;
 			meta.Codec = Codec.OpusVoice;
