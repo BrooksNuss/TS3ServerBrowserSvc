@@ -44,8 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncStreamAudioProducer.cs" />
+    <Compile Include="IPCMessage.cs" />
     <Compile Include="StreamAudioConsumer.cs" />
-    <Compile Include="TargetPipe.cs" />
+    <Compile Include="CommandPipe.cs" />
     <Compile Include="NodeClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -60,6 +61,11 @@
       <Project>{0eb99e9d-87e5-4534-a100-55d231c2b6a6}</Project>
       <Name>TS3Client</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.2</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

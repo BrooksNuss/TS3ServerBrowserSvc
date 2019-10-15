@@ -23,7 +23,7 @@ namespace NodeClient {
 		}
 
 		async private void Initialize() {
-			while (this.running) {
+			while (running) {
 				await inStream.ReadAsync(readBuffer, 0, ReadBufferSize);
 				OutStream.Write(readBuffer.AsSpan(), meta);
 			}

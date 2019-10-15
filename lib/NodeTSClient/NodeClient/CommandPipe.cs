@@ -1,29 +1,29 @@
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Runtime.InteropServices;
 using System.Text;
 using TS3Client.Commands;
 using TS3Client.Full;
 
 namespace NodeClient {
 	internal class CommandPipe {
-		public bool Active { get { return true; } }
+		public bool active = false;
 		private string id;
 		private Ts3FullClient client;
 		NamedPipeClientStream stream;
-		private byte[] buffer = new byte[9];
+		private byte[] buffer = new byte[256];
 
 		public CommandPipe(Ts3FullClient client, string id) {
 			this.client = client;
 			this.id = id;
-			stream = new NamedPipeClientStream(this.id);
+			stream = new NamedPipeClientStream(".", id, PipeDirection.In, PipeOptions.Asynchronous);
+			stream.Connect();
+			active = true;
 			init();
 		}
 
 		private async void init() {
-			while (Active) {
+			while (active) {
 				await stream.ReadAsync(buffer, 0, buffer.Length);
 				processCommand(buffer);
 			}
@@ -31,7 +31,7 @@ namespace NodeClient {
 
 		private void processCommand(byte[] data) {
 			string jsonString = Encoding.UTF8.GetString(data);
-			IPCMessage command = JsonConvert.DeserializeObject<IPCMessage>(jsonString);
+			TSClientCommand command = JsonConvert.DeserializeObject<TSClientCommand>(jsonString);
 			switch (command.Type) {
 				case IPCMessageType.DISCONNECT:
 					client.Disconnect(); break;

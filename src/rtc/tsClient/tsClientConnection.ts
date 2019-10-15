@@ -1,9 +1,9 @@
 import { WebRtcConnection } from '../connections/webrtcConnection';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { Writable, Readable } from 'stream';
-import { IPCMessage, TSCommand } from '../models/IPCMessage';
+import { IPCMessage } from '../models/IPCMessage';
 import { IPC } from 'node-ipc';
-import { ts3Config } from '../../config'
+import { ts3Config } from '../../config';
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;
 const EventEmitter = require('events');
 const path = require('path');
@@ -11,7 +11,7 @@ const path = require('path');
 export class TsClientConnection extends EventEmitter {
     public id: string;
     public webRtcConnection: WebRtcConnection;
-    public tsClient: ChildProcessWithoutNullStreams;
+    public tsClient!: ChildProcessWithoutNullStreams;
     private clientPath = path.resolve(__dirname, '../../../lib/NodeTSClient/NodeClient/bin/Debug/NodeClient.exe');
     private dataChannel: RTCDataChannel;
     private peerConnection: RTCPeerConnection;
@@ -34,7 +34,6 @@ export class TsClientConnection extends EventEmitter {
         this.peerConnection = this.webRtcConnection.peerConnection;
         this.dataChannel = this.webRtcConnection.peerConnection.createDataChannel('dataChannel');
         // get some of this from the ui, and the environment constants from the config
-        this.tsClient = spawn(this.clientPath, [id, 'TSWebClient', '', '/25', '', ts3Config.host, ts3Config.password]);
         this.setupTsClient();
     }
 
@@ -50,7 +49,13 @@ export class TsClientConnection extends EventEmitter {
     setupTsClient() {
         this.peerConnection.addEventListener('connectionstatechange', this.rtcConnectionListener);
         this.ipc.config.id = this.id;
-        this.ipc.serve(this.id);
+        this.ipc.config.appspace = 'NodeTS';
+        this.ipc.serve(this.id, () => {
+            this.tsClient = spawn(
+                this.clientPath,
+                [this.id, 'TSWebClient', '', '/25', '', ts3Config.host, ts3Config.serverPassword]
+            );
+        });
         this.ipc.server.start();
     }
 
@@ -111,6 +116,18 @@ export class TsClientConnection extends EventEmitter {
         });
     }
 
+    closeConnection() {
+        (this.ipc.server as any).broadcast('DISCONNECT');
+        // lazy, should improve this timing
+        setTimeout(() => {
+            this.dataChannel.close();
+            this.webRtcConnection.close();
+            if (process.send) {
+                process.send({type: 'close'} as IPCMessage);
+            }
+        }, 1000);
+    }
+
     setupDataChannel() {
         this.dataChannel.onopen = () => {
 
@@ -122,6 +139,7 @@ export class TsClientConnection extends EventEmitter {
             switch (message.data) {
                 case 'mute': this.muted = true; break;
                 case 'unmute': this.muted = false; break;
+                case 'close': this.closeConnection(); break;
             }
         };
     }
@@ -147,12 +165,12 @@ export class TsClientConnection extends EventEmitter {
             this.peerConnection.connectionState === 'failed' ||
             this.peerConnection.connectionState === 'disconnected'
         ) {
-                    this.tsClient.stdout.destroy();
-                    this.tsClient.stdin.end();
-                    this.tsClient.kill();
-                    if (this.sink) {
-                        this.sink.ondata = null;
-                    }
+            this.tsClient.stdout.destroy();
+            this.tsClient.stdin.end();
+            this.tsClient.kill();
+            if (this.sink) {
+                this.sink.ondata = null;
+            }
         }
     }
 

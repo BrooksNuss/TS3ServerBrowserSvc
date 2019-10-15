@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using System.Collections.Specialized;
 using TS3Client;
 using TS3Client.Full;
 using TS3Client.Audio;
@@ -15,7 +14,7 @@ namespace NodeClient
 			Ts3FullClient client = new Ts3FullClient(TS3Client.EventDispatchType.DoubleThread);
 			VersionSign version = VersionSign.VER_WIN_3_2_3;
 			IdentityData identity;
-			Thread.Sleep(20000);
+			//Thread.Sleep(20000);
 			string id = args[0];
 			if (!string.IsNullOrEmpty(args[2])) {
 				identity = Ts3Crypt.LoadIdentityDynamic(args[2]).Value;
@@ -33,6 +32,7 @@ namespace NodeClient
 				DefaultChannelPassword = args[4],
 			};
 			client.Connect(connectionConfig);
+			CommandPipe commandPipe = new CommandPipe(client, id);
 			Stream stdin = Console.OpenStandardInput();
 			Stream stdout = Console.OpenStandardOutput();
 			int ScaleBitrate(int value) => Math.Min(Math.Max(1, value), 255) * 1000;

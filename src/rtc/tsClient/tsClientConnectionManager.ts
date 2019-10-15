@@ -34,6 +34,10 @@ export class TsClientConnectionManager {
         const id = this.createId();
         const connectionProcess = fork(this.childPath, [id], {execArgv: ['--inspect-brk'], silent: true});
         connectionProcess.on('close', () => {
+            const proc = this.connections.get(id);
+            if (proc) {
+                proc.kill();
+            }
             this.connections.delete(id);
         });
         connectionProcess.on('error', err => {
@@ -46,7 +50,7 @@ export class TsClientConnectionManager {
             console.log('stdout: ' + data);
         });
         this.connections.set(id, connectionProcess);
-        this.setupIPCListener(connectionProcess);
+        this.setupIPCListener(connectionProcess, id);
         connectionProcess.once('message', (message: IPCMessage) => {
             if (message.type === 'ready') {
                 connectionProcess.send({type: 'doOffer'});
@@ -82,10 +86,17 @@ export class TsClientConnectionManager {
         });
     }
 
-    setupIPCListener(process: ChildProcess) {
+    setupIPCListener(process: ChildProcess, id: string) {
         process.on('message', (msg: IPCMessage) => {
             switch (msg.type) {
                 // case 'doOffer':
+                case 'close': {
+                    const proc = this.connections.get(id);
+                    if (proc) {
+                        proc.kill();
+                    }
+                    this.connections.delete(id);
+                }
             }
         });
     }
