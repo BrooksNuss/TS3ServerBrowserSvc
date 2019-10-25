@@ -16,7 +16,7 @@ export class TsClientConnection extends EventEmitter {
     private dataChannel: RTCDataChannel;
     private peerConnection: RTCPeerConnection;
     private MAX_OUTSTREAM_BYTELENGTH = 960;
-    private muted = true;
+    private receivingAudio = true;
     private rtcConnected = false;
     private sink: any;
     private source: any;
@@ -25,7 +25,7 @@ export class TsClientConnection extends EventEmitter {
     constructor(id: string) {
         super();
         this.id = id;
-        this.setupIPCListener();
+        this.setupManagerListener();
         this.webRtcConnection = new WebRtcConnection(id);
         if (process.send) {
             process.send({type: 'ready'} as IPCMessage);
@@ -37,7 +37,7 @@ export class TsClientConnection extends EventEmitter {
         this.setupTsClient();
     }
 
-    setupIPCListener() {
+    setupManagerListener() {
         process.on('message', (msg: IPCMessage) => {
             switch (msg.type) {
                 case 'doOffer': this.webRtcConnection.doOffer(); break;
@@ -62,7 +62,7 @@ export class TsClientConnection extends EventEmitter {
     setupAudioInput() {
         this.sink = new RTCAudioSink(this.peerConnection.getTransceivers()[0].receiver.track);
         this.sink.ondata = (data: any) => {
-            if (!this.muted) {
+            if (!this.receivingAudio) {
                 const buffer = Buffer.from(data.samples.buffer as ArrayBuffer);
                 if (this.tsClient && this.tsClient.stdin && (this.tsClient.stdin as any).readyState !== 'closed' && !this.tsClient.killed) {
                     (this.tsClient.stdin as Writable).write(buffer);
@@ -136,12 +136,19 @@ export class TsClientConnection extends EventEmitter {
 
         };
         this.dataChannel.onmessage = message => {
-            switch (message.data) {
-                case 'mute': this.muted = true; break;
-                case 'unmute': this.muted = false; break;
-                case 'close': this.closeConnection(); break;
+            const messageSplit = message.data.split(' ');
+            switch (messageSplit[0]) {
+                case 'VAD_ACTIVE': this.receivingAudio = true; break;
+                case 'VAD_INACTIVE': this.receivingAudio = false; break;
+                case 'DISCONNECT': this.closeConnection(); break;
+                case 'TOGGLE_MUTE_INPUT': this.sendIPCMessage(messageSplit); break;
+                case 'TOGGLE_MUTE_OUTPUT': this.sendIPCMessage(messageSplit); break;
             }
         };
+    }
+
+    sendIPCMessage(messageSplit: string[]) {
+        (this.ipc.server as any).broadcast({type: messageSplit[0], data: messageSplit.slice(1)});
     }
 
     private rtcConnectionListener = () => {

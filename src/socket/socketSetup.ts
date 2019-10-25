@@ -1,9 +1,11 @@
+import { TeamSpeak } from 'ts3-nodejs-library';
+
 /**
  * Helper funciton for setting up TeamSpeak event listeners
  * @param ts3 TS3 server object
  * @param socketServer websocket server
  */
-export function setupTSListeners(ts3: TeamSpeak3, socketServer: SocketIO.Server) {
+export function setupTSListeners(ts3: TeamSpeak, socketServer: SocketIO.Server) {
     const standardEvents = [
       'clientconnect',
       'clientdisconnect',
@@ -27,7 +29,7 @@ export function setupTSListeners(ts3: TeamSpeak3, socketServer: SocketIO.Server)
     // });
 }
 
-export function registerTSEvents(ts3: TeamSpeak3) {
+export function registerTSEvents(ts3: TeamSpeak) {
     Promise.all([
         ts3.registerEvent('server'),
         ts3.registerEvent('channel', 0),

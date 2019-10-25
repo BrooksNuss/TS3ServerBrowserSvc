@@ -1,12 +1,11 @@
 import express from 'express';
-import 'ts3-nodejs-library';
 import {ts3Config} from './config';
+import { TeamSpeak } from 'ts3-nodejs-library';
 import { setupTSListeners, registerTSEvents } from './socket/socketSetup';
 import bodyParser = require('body-parser');
 import { TsClientConnectionManager } from './rtc/tsClient/tsClientConnectionManager';
 const path = require('path');
 const socketIo = require('socket.io');
-const TeamSpeak3 = require('ts3-nodejs-library');
 const cors = require('cors');
 const app = express();
 const expressPort = 8080;
@@ -16,7 +15,7 @@ const https = require('https');
 const privateKey = fs.readFileSync(path.resolve(__dirname, '../../server.key'), 'utf8');
 const cert = fs.readFileSync(path.resolve(__dirname, '../../server.crt'), 'utf8');
 const httpsCredentials = {key: privateKey, cert};
-const ts3: TeamSpeak3 = new TeamSpeak3(ts3Config);
+let ts3: TeamSpeak;
 let ts3Ready = false;
 const socketConnections: Array<SocketIO.Socket> = [];
 
@@ -31,20 +30,23 @@ httpsServer.listen(expressPort, () => {
 });
 const socketServer = socketIo(httpsServer);
 
-ts3.on('ready', async () => {
-    try {
-        ts3Ready = true;
-        registerTSEvents(ts3);
-        setupTSListeners(ts3, socketServer);
-    } catch (e) {
-        console.log('error');
-        console.log(e);
-    }
-});
+TeamSpeak.connect(ts3Config).then(ts => {
+    ts3 = ts;
+    ts3.on('ready', async () => {
+        try {
+            ts3Ready = true;
+            registerTSEvents(ts3);
+            setupTSListeners(ts3, socketServer);
+        } catch (e) {
+            console.log('error');
+            console.log(e);
+        }
+    });
 
-ts3.on('error', (err) => {
-    console.log('TS3 ERROR');
-    console.log(err);
+    ts3.on('error', (err) => {
+        console.log('TS3 ERROR');
+        console.log(err);
+    });
 });
 
 socketServer.on('connection', (socket: any) => {

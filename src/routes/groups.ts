@@ -1,5 +1,7 @@
 import express from 'express';
 import { ts3 } from '../app';
+import { TeamSpeakServerGroup } from 'ts3-nodejs-library/lib/node/ServerGroup';
+import { TeamSpeakChannelGroup } from 'ts3-nodejs-library/lib/node/ChannelGroup';
 
 const groupRouter = express.Router();
 const serverRouter = express.Router();
@@ -14,7 +16,7 @@ groupRouter.use('/channel', channelRouter);
 serverRouter.get('/list', (req, res) => {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: {icon: Buffer | null, group: TeamSpeakServerGroup}[] = [];
-    ts3.serverGroupList({type: '1'}).then((serverGroupList) => {
+    ts3.serverGroupList({type: 1}).then((serverGroupList) => {
         const serverGroupListIcons = serverGroupList.filter(group => (group as any).iconid !== '0');
         const serverGroupListNoIcons = serverGroupList.filter(group => (group as any).iconid === '0');
         serverGroupListIcons.forEach(group => {
@@ -41,9 +43,11 @@ serverRouter.get('/list', (req, res) => {
  */
 serverRouter.get('/icons/:groupId', (req, res) => {
     ts3.getServerGroupByID(req.params.groupId).then((serverGroup) => {
-        serverGroup.getIcon().then(icon => {
-            res.send(icon);
-        });
+        if (serverGroup) {
+            serverGroup.getIcon().then(icon => {
+                res.send(icon);
+            });
+        }
     });
 });
 
@@ -57,7 +61,7 @@ serverRouter.get('/', (req, res) => {
 channelRouter.get('/list', (req, res) => {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: {icon: Buffer | null, group: TeamSpeakChannelGroup}[] = [];
-    ts3.channelGroupList({type: '1'}).then((serverGroupList) => {
+    ts3.channelGroupList({type: 1}).then((serverGroupList) => {
         const serverGroupListIcons = serverGroupList.filter(group => (group as any).iconid !== '0');
         const serverGroupListNoIcons = serverGroupList.filter(group => (group as any).iconid === '0');
         serverGroupListIcons.forEach(group => {
@@ -84,9 +88,11 @@ channelRouter.get('/list', (req, res) => {
  */
 channelRouter.get('/icons/:groupId', (req, res) => {
     ts3.getChannelGroupByID(req.params.groupId).then((channelGroup) => {
-        channelGroup.getIcon().then(icon => {
-            res.send(icon);
-        });
+        if (channelGroup) {
+            channelGroup.getIcon().then(icon => {
+                res.send(icon);
+            });
+        }
     });
 });
 
