@@ -6,27 +6,37 @@ import { TeamSpeak } from 'ts3-nodejs-library';
  * @param socketServer websocket server
  */
 export function setupTSListeners(ts3: TeamSpeak, socketServer: SocketIO.Server) {
-    const standardEvents = [
-      'clientconnect',
-      'clientdisconnect',
-      'clientmoved',
-      'serveredit',
-      'channeledit',
-      'channelcreate',
-      'channelmoved',
-      'channeldelete'
-    ];
-
-    standardEvents.forEach(eventType => {
-        ts3.on(eventType, event => {
-            // console.log(event);
-            socketServer.emit(eventType, event);
-        });
+    ts3.on('clientconnect', event => {
+        socketServer.emit('clientconnect', event);
     });
 
-    // ts3.on('clientconnect', event => {
-    //     console.log(event);
-    // });
+    ts3.on('clientdisconnect', event => {
+        socketServer.emit('clientdisconnect', event);
+    });
+
+    ts3.on('clientmoved', event => {
+        socketServer.emit('clientmoved', event);
+    });
+
+    ts3.on('serveredit', event => {
+        socketServer.emit('serveredit', event);
+    });
+
+    ts3.on('channeledit', event => {
+        socketServer.emit('channeledit', event);
+    });
+
+    ts3.on('channelcreate', event => {
+        socketServer.emit('channelcreate', event);
+    });
+
+    ts3.on('channelmoved', event => {
+        socketServer.emit('channelmoved', event);
+    });
+
+    ts3.on('channeldelete', event => {
+        socketServer.emit('channeldelete', event);
+    });
 }
 
 export function registerTSEvents(ts3: TeamSpeak) {

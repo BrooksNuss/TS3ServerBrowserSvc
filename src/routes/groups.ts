@@ -17,20 +17,26 @@ serverRouter.get('/list', (req, res) => {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: {icon: Buffer | null, group: TeamSpeakServerGroup}[] = [];
     ts3.serverGroupList({type: 1}).then((serverGroupList) => {
-        const serverGroupListIcons = serverGroupList.filter(group => (group as any).iconid !== '0');
-        const serverGroupListNoIcons = serverGroupList.filter(group => (group as any).iconid === '0');
+        const serverGroupListIcons = serverGroupList.filter(group => group.iconid !== 0);
+        const serverGroupListNoIcons = serverGroupList.filter(group => group.iconid === 0);
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
             promise.then(icon => {
                 // convert icon buffer to base64 string
                 responseList.push({group, icon: icon.toString('base64') as any});
+            }, err => {
+                responseList.push({group, icon: null});
             });
         });
         serverGroupListNoIcons.forEach(group => {
             responseList.push({group, icon: null});
         });
         Promise.all(promiseList).then(icons => {
+            setTimeout(() => {
+                res.send(responseList);
+            }, 0);
+        }, err => {
             setTimeout(() => {
                 res.send(responseList);
             }, 0);
@@ -62,8 +68,8 @@ channelRouter.get('/list', (req, res) => {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: {icon: Buffer | null, group: TeamSpeakChannelGroup}[] = [];
     ts3.channelGroupList({type: 1}).then((serverGroupList) => {
-        const serverGroupListIcons = serverGroupList.filter(group => (group as any).iconid !== '0');
-        const serverGroupListNoIcons = serverGroupList.filter(group => (group as any).iconid === '0');
+        const serverGroupListIcons = serverGroupList.filter(group => group.iconid !== 0);
+        const serverGroupListNoIcons = serverGroupList.filter(group => group.iconid === 0);
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
@@ -76,6 +82,10 @@ channelRouter.get('/list', (req, res) => {
             responseList.push({group, icon: null});
         });
         Promise.all(promiseList).then(icons => {
+            setTimeout(() => {
+                res.send(responseList);
+            }, 0);
+        }, err => {
             setTimeout(() => {
                 res.send(responseList);
             }, 0);
