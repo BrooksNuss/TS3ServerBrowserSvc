@@ -4,6 +4,8 @@ import { TeamSpeak } from 'ts3-nodejs-library';
 import { setupTSListeners, registerTSEvents } from './socket/socketSetup';
 import bodyParser = require('body-parser');
 import { TsClientConnectionManager } from './rtc/tsClient/tsClientConnectionManager';
+import { ServerBrowserCacheService } from './cache/serverBrowserCache.service';
+import { ClientStatusService } from './cache/clientStatus.service';
 const path = require('path');
 const socketIo = require('socket.io');
 const cors = require('cors');
@@ -28,7 +30,7 @@ const httpsServer = https.createServer(httpsCredentials, app);
 httpsServer.listen(expressPort, () => {
     console.log( `server started at https://localhost:${ expressPort }` );
 });
-const socketServer = socketIo(httpsServer);
+const socketServer: SocketIO.Server = socketIo(httpsServer);
 
 TeamSpeak.connect(ts3Config).then(ts => {
     ts3 = ts;
@@ -59,5 +61,7 @@ socketServer.on('connection', (socket: any) => {
 });
 
 const rtcApp = new TsClientConnectionManager();
+const fileCache = new ServerBrowserCacheService();
+const clientStatusService = new ClientStatusService();
 
-export {ts3, app, rtcApp};
+export {ts3, app, rtcApp, socketServer, fileCache};

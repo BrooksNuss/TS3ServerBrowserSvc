@@ -1,5 +1,5 @@
 import express from 'express';
-import { ts3 } from '../app';
+import { ts3, fileCache } from '../app';
 import { ClientResponse } from './models/ClientResponse';
 
 const userRouter = express.Router();
@@ -10,10 +10,10 @@ const userRouter = express.Router();
 userRouter.get('/list', (req, res) => {
     // client_type of 0 means standard user, not query user.
     const responseList: ClientResponse[] = [];
-    const promiseList: Promise<Buffer>[] = [];
+    const promiseList: Promise<string>[] = [];
     ts3.clientList({client_type: 0}).then((clientList) => {
         clientList.forEach(client => {
-            const promise = client.getAvatar();
+            const promise = fileCache.getAvatar(client);
             promiseList.push(promise);
             promise.then(avatar => {
                 responseList.push({client, avatar});
