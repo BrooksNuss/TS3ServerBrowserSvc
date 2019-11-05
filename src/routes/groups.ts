@@ -2,6 +2,7 @@ import express from 'express';
 import { ts3 } from '../app';
 import { TeamSpeakServerGroup } from 'ts3-nodejs-library/lib/node/ServerGroup';
 import { TeamSpeakChannelGroup } from 'ts3-nodejs-library/lib/node/ChannelGroup';
+import { ServerGroupResponse, ChannelGroupResponse } from './models/TSResponses';
 
 const groupRouter = express.Router();
 const serverRouter = express.Router();
@@ -13,36 +14,39 @@ groupRouter.use('/channel', channelRouter);
 /**
  * Return all server groups with icons included
  */
-serverRouter.get('/list', (req, res) => {
+serverRouter.get('/list', async (req, res) => {
+    res.send(await getServerGroupList());
+});
+
+async function getServerGroupList(): Promise<ServerGroupResponse[]> {
     const promiseList: Promise<Buffer>[] = [];
-    const responseList: {icon: Buffer | null, group: TeamSpeakServerGroup}[] = [];
-    ts3.serverGroupList({type: 1}).then((serverGroupList) => {
+    const responseList: ServerGroupResponse[] = [];
+    try {
+        const serverGroupList = await ts3.serverGroupList({type: 1});
         const serverGroupListIcons = serverGroupList.filter(group => group.iconid !== 0);
         const serverGroupListNoIcons = serverGroupList.filter(group => group.iconid === 0);
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
+            const resp = {} as ServerGroupResponse;
+            Object.assign(resp, group);
             promise.then(icon => {
-                // convert icon buffer to base64 string
-                responseList.push({group, icon: icon.toString('base64') as any});
+                resp.icon = icon.toString('base64');
+                responseList.push(resp);
             }, err => {
-                responseList.push({group, icon: null});
+                console.error(err);
+                responseList.push(resp);
             });
         });
         serverGroupListNoIcons.forEach(group => {
-            responseList.push({group, icon: null});
+            responseList.push(group as ServerGroupResponse);
         });
-        Promise.all(promiseList).then(icons => {
-            setTimeout(() => {
-                res.send(responseList);
-            }, 0);
-        }, err => {
-            setTimeout(() => {
-                res.send(responseList);
-            }, 0);
-        });
-    });
-});
+        await Promise.all(promiseList);
+    } catch (err) {
+        console.error(err);
+    }
+    return responseList;
+}
 
 /**
  * Return icon of servergroup
@@ -64,34 +68,39 @@ serverRouter.get('/', (req, res) => {
 /**
  * Return all server groups with icons included
  */
-channelRouter.get('/list', (req, res) => {
+channelRouter.get('/list', async (req, res) => {
+    res.send(await getChannelGroupList());
+});
+
+async function getChannelGroupList() {
     const promiseList: Promise<Buffer>[] = [];
-    const responseList: {icon: Buffer | null, group: TeamSpeakChannelGroup}[] = [];
-    ts3.channelGroupList({type: 1}).then((serverGroupList) => {
+    const responseList: ChannelGroupResponse[] = [];
+    try {
+        const serverGroupList = await ts3.channelGroupList({type: 1});
         const serverGroupListIcons = serverGroupList.filter(group => group.iconid !== 0);
         const serverGroupListNoIcons = serverGroupList.filter(group => group.iconid === 0);
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
+            const resp = {} as ChannelGroupResponse;
+            Object.assign(resp, group);
             promise.then(icon => {
-                // convert icon buffer to base64 string
-                responseList.push({group, icon: icon.toString('base64') as any});
+                resp.icon = icon.toString('base64');
+                responseList.push(resp);
+            }, err => {
+                console.error(err);
+                responseList.push(resp);
             });
         });
         serverGroupListNoIcons.forEach(group => {
-            responseList.push({group, icon: null});
+            responseList.push(group as ChannelGroupResponse);
         });
-        Promise.all(promiseList).then(icons => {
-            setTimeout(() => {
-                res.send(responseList);
-            }, 0);
-        }, err => {
-            setTimeout(() => {
-                res.send(responseList);
-            }, 0);
-        });
-    });
-});
+        await Promise.all(promiseList);
+    } catch (err) {
+        console.error(err);
+    }
+    return responseList;
+}
 
 /**
  * Return icon of channelgroup

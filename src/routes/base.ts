@@ -12,8 +12,8 @@ router.use('/groups', require('./groups'));
 
 router.use('/rtc', require('./rtc'));
 
-// router.use("*", (req, res) => {
-//     res.send("/api/v1/");
-// });
+router.use('/lookup', (req, res) => {
+    
+});
 
 module.exports = router;

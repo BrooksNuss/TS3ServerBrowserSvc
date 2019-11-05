@@ -1,34 +1,39 @@
 import express from 'express';
 import { ts3, fileCache } from '../app';
-import { ClientResponse } from './models/ClientResponse';
+import { ClientResponse } from './models/TSResponses';
 
 const userRouter = express.Router();
 
 /**
  * Return list of users
  */
-userRouter.get('/list', (req, res) => {
+userRouter.get('/list', async (req, res) => {
+    res.send(await getClientList());
+});
+
+async function getClientList(): Promise<ClientResponse[]> {
     // client_type of 0 means standard user, not query user.
     const responseList: ClientResponse[] = [];
     const promiseList: Promise<string>[] = [];
-    ts3.clientList({client_type: 0}).then((clientList) => {
+    try {
+        const clientList = await ts3.clientList({client_type: 0});
         clientList.forEach(client => {
             const promise = fileCache.getAvatar(client);
             promiseList.push(promise);
+            const resp = {} as ClientResponse;
+            Object.assign(resp, client);
             promise.then(avatar => {
-                responseList.push({client, avatar});
+                resp.avatar = avatar;
+                responseList.push(resp);
             }, err => {
-                console.error('client avatar error');
+                responseList.push(resp);
             });
         });
-        Promise.all(promiseList).then(list => {
-            res.send(responseList);
-        }, err => {
-            res.send(responseList);
-        });
-    }, err => {
-        console.log('client list error');
-    });
-});
+        await Promise.all(promiseList);
+    } catch (err) {
+        console.error(err);
+    }
+    return responseList;
+}
 
 module.exports = userRouter;
