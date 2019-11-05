@@ -1,7 +1,5 @@
 import express from 'express';
 import { ts3 } from '../app';
-import { TeamSpeakServerGroup } from 'ts3-nodejs-library/lib/node/ServerGroup';
-import { TeamSpeakChannelGroup } from 'ts3-nodejs-library/lib/node/ChannelGroup';
 import { ServerGroupResponse, ChannelGroupResponse } from './models/TSResponses';
 
 const groupRouter = express.Router();
@@ -18,7 +16,7 @@ serverRouter.get('/list', async (req, res) => {
     res.send(await getServerGroupList());
 });
 
-async function getServerGroupList(): Promise<ServerGroupResponse[]> {
+export async function getServerGroupList(): Promise<ServerGroupResponse[]> {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: ServerGroupResponse[] = [];
     try {
@@ -52,7 +50,7 @@ async function getServerGroupList(): Promise<ServerGroupResponse[]> {
  * Return icon of servergroup
  */
 serverRouter.get('/icons/:groupId', (req, res) => {
-    ts3.getServerGroupByID(req.params.groupId).then((serverGroup) => {
+    ts3.getServerGroupByID(parseInt(req.params.groupId)).then((serverGroup) => {
         if (serverGroup) {
             serverGroup.getIcon().then(icon => {
                 res.send(icon);
@@ -72,7 +70,7 @@ channelRouter.get('/list', async (req, res) => {
     res.send(await getChannelGroupList());
 });
 
-async function getChannelGroupList() {
+export async function getChannelGroupList() {
     const promiseList: Promise<Buffer>[] = [];
     const responseList: ChannelGroupResponse[] = [];
     try {
@@ -106,7 +104,7 @@ async function getChannelGroupList() {
  * Return icon of channelgroup
  */
 channelRouter.get('/icons/:groupId', (req, res) => {
-    ts3.getChannelGroupByID(req.params.groupId).then((channelGroup) => {
+    ts3.getChannelGroupByID(parseInt(req.params.groupId)).then((channelGroup) => {
         if (channelGroup) {
             channelGroup.getIcon().then(icon => {
                 res.send(icon);

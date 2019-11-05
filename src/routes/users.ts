@@ -11,7 +11,7 @@ userRouter.get('/list', async (req, res) => {
     res.send(await getClientList());
 });
 
-async function getClientList(): Promise<ClientResponse[]> {
+export async function getClientList(): Promise<ClientResponse[]> {
     // client_type of 0 means standard user, not query user.
     const responseList: ClientResponse[] = [];
     const promiseList: Promise<string>[] = [];

@@ -57,7 +57,8 @@
       true,
       "single"
     ],
-    "trailing-comma": false
+    "trailing-comma": false,
+    "radix": false
   },
   "linterOptions": {
     "exclude": [

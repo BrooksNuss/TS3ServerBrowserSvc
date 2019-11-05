@@ -18,7 +18,6 @@ const privateKey = fs.readFileSync(path.resolve(__dirname, '../../server.key'), 
 const cert = fs.readFileSync(path.resolve(__dirname, '../../server.crt'), 'utf8');
 const httpsCredentials = {key: privateKey, cert};
 let ts3: TeamSpeak;
-let ts3Ready = false;
 const socketConnections: Array<SocketIO.Socket> = [];
 
 app.use(cors());
@@ -36,7 +35,6 @@ TeamSpeak.connect(ts3Config).then(ts => {
     ts3 = ts;
     ts3.on('ready', async () => {
         try {
-            ts3Ready = true;
             registerTSEvents(ts3);
             setupTSListeners(ts3, socketServer);
         } catch (e) {
