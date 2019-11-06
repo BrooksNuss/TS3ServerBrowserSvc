@@ -20,8 +20,7 @@ export async function getClientList(): Promise<ClientResponse[]> {
         clientList.forEach(client => {
             const promise = fileCache.getAvatar(client);
             promiseList.push(promise);
-            const resp = {} as ClientResponse;
-            Object.assign(resp, client);
+            const resp = client as ClientResponse;
             promise.then(avatar => {
                 resp.avatar = avatar;
                 responseList.push(resp);
@@ -36,4 +35,4 @@ export async function getClientList(): Promise<ClientResponse[]> {
     return responseList;
 }
 
-module.exports = userRouter;
+module.exports = {userRouter, getClientList};
