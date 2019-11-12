@@ -10,22 +10,40 @@ export class ServerBrowserCacheService {
         this.fileCache = new NodeCache({stdTTL: 86400, checkperiod: 3600});
     }
 
-    async getAvatar(client: TeamSpeakClient): Promise<string> {
-        const avatarKey = `avatar_${client.databaseId}`;
-        let avatarString = this.fileCache.get<string>(avatarKey);
-        if (avatarString) {
-            return Promise.resolve(avatarString);
-        } else {
+    private async getClientAvatar(client: TeamSpeakClient): Promise<Buffer | undefined> {
+        let avatarBuffer;
+        try {
+            avatarBuffer = await client.getAvatar();
+        } catch (e) {
+            console.error(e);
+        }
+        return Promise.resolve(avatarBuffer);
+    }
+
+    async getFileByName(filename: string): Promise<Buffer | undefined> {
+        const filepath = `/${filename}`;
+        let file = this.fileCache.get<Buffer>(filepath);
+        if (!file) {
             try {
-                const avatarBuffer = await client.getAvatar();
-                // save encoded. more memory usage, less cpu time per fetch. could swap if memory usage too high.
-                avatarString = avatarBuffer.toString('base64');
-                this.fileCache.set(avatarKey, avatarString);
-                return Promise.resolve(avatarString);
+                file = await ts3.downloadFile(filepath);
+                this.fileCache.set(filename, file);
             } catch (e) {
                 console.error(e);
-                return Promise.resolve('');
             }
         }
+        return Promise.resolve(file);
+    }
+
+    async getAvatarByName(clientDBId: number): Promise<Buffer | undefined> {
+        const avatarKey = `client_${clientDBId}_avatar`;
+        let avatarBuffer = this.fileCache.get<Buffer>(avatarKey);
+        if (!avatarBuffer) {
+            const client = await ts3.getClientByDBID(clientDBId);
+            if (client) {
+                avatarBuffer = await this.getClientAvatar(client);
+                this.fileCache.set(avatarKey, avatarBuffer);
+            }
+        }
+        return Promise.resolve(avatarBuffer);
     }
 }
