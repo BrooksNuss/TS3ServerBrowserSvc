@@ -15,4 +15,4 @@ export async function getChannelList(): Promise<TeamSpeakChannel[]> {
     return await ts3.channelList({});
 }
 
-module.exports = channelRouter;
+module.exports = {channelRouter, getChannelList};

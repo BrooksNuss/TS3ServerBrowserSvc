@@ -36,4 +36,4 @@ export async function getClientList(): Promise<TeamSpeakClient[]> {
     return clientList;
 }
 
-module.exports = userRouter;
+module.exports = {userRouter, getClientList};

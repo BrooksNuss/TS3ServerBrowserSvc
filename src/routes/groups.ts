@@ -26,8 +26,7 @@ export async function getServerGroupList(): Promise<ServerGroupResponse[]> {
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
-            const resp = {} as ServerGroupResponse;
-            Object.assign(resp, group);
+            const resp = group as ServerGroupResponse;
             promise.then(icon => {
                 resp.icon = icon.toString('base64');
                 responseList.push(resp);
@@ -80,8 +79,7 @@ export async function getChannelGroupList() {
         serverGroupListIcons.forEach(group => {
             const promise = group.getIcon();
             promiseList.push(promise);
-            const resp = {} as ChannelGroupResponse;
-            Object.assign(resp, group);
+            const resp = group as ChannelGroupResponse;
             promise.then(icon => {
                 resp.icon = icon.toString('base64');
                 responseList.push(resp);
@@ -121,4 +119,4 @@ groupRouter.get('/', (req, res) => {
     res.json('/groups');
 });
 
-module.exports = groupRouter;
+module.exports = {groupRouter, getChannelGroupList, getServerGroupList};

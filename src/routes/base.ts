@@ -8,11 +8,11 @@ import { ServerBrowserLookupResponse } from './models/TSResponses';
 
 const router = express.Router();
 
-router.use('/users', require('./users'));
+router.use('/users', require('./users').userRouter);
 
-router.use('/channels', require('./channels'));
+router.use('/channels', require('./channels').channelRouter);
 
-router.use('/groups', require('./groups'));
+router.use('/groups', require('./groups').groupRouter);
 
 router.use('/rtc', require('./rtc'));
 
@@ -24,7 +24,8 @@ router.use('/lookup', async (req, res) => {
         serverGroups: lookupValues[2],
         channelGroups: lookupValues[3]
     };
-    res.send(response);
+    res.type('application/json');
+    res.json(response);
 });
 
 module.exports = router;
