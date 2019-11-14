@@ -4,7 +4,7 @@ import { TeamSpeakChannelGroup } from 'ts3-nodejs-library/lib/node/ChannelGroup'
 import { TeamSpeakChannel } from 'ts3-nodejs-library/lib/node/Channel';
 
 export interface ClientResponse extends TeamSpeakClient {
-    avatar: string;
+    avatarGUID: string;
 }
 
 export interface ServerGroupResponse extends TeamSpeakServerGroup {

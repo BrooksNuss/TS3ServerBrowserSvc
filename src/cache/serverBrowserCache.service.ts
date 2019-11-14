@@ -1,6 +1,8 @@
 import NodeCache from 'node-cache';
 import { ts3 } from '../app';
 import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
+import { ClientAvatarCache } from './models/AvatarCacheModel';
+const uuidv4 = require('uuidv4');
 
 export class ServerBrowserCacheService {
     public fileCache: NodeCache;
@@ -10,14 +12,22 @@ export class ServerBrowserCacheService {
         this.fileCache = new NodeCache({stdTTL: 86400, checkperiod: 3600});
     }
 
-    private async getClientAvatar(client: TeamSpeakClient): Promise<Buffer | undefined> {
+    async getClientAvatar(clientDBId: number): Promise<ClientAvatarCache | undefined> {
         let avatarBuffer;
-        try {
-            avatarBuffer = await client.getAvatar();
-        } catch (e) {
-            console.error(e);
+        const client = await ts3.getClientByDBID(clientDBId);
+        let cacheObject: ClientAvatarCache | undefined;
+        if (client) {
+            try {
+                avatarBuffer = await client.getAvatar();
+            } catch (e) {
+                console.error(e);
+            }
+            if (avatarBuffer) {
+                cacheObject = {clientDBId, avatarGUID: this.createId(), avatarBuffer: avatarBuffer.toString('base64')};
+                this.fileCache.set<ClientAvatarCache>(`client_${clientDBId}_avatar`, cacheObject);
+            }
         }
-        return Promise.resolve(avatarBuffer);
+        return Promise.resolve(cacheObject);
     }
 
     async getFileByName(filename: string): Promise<Buffer | undefined> {
@@ -34,16 +44,19 @@ export class ServerBrowserCacheService {
         return Promise.resolve(file);
     }
 
-    async getAvatarByName(clientDBId: number): Promise<Buffer | undefined> {
-        const avatarKey = `client_${clientDBId}_avatar`;
-        let avatarBuffer = this.fileCache.get<Buffer>(avatarKey);
+    async getAvatarByClientDBId(clientDBId: number): Promise<ClientAvatarCache | undefined> {
+        let avatarBuffer = this.getCachedAvatar(clientDBId);
         if (!avatarBuffer) {
-            const client = await ts3.getClientByDBID(clientDBId);
-            if (client) {
-                avatarBuffer = await this.getClientAvatar(client);
-                this.fileCache.set(avatarKey, avatarBuffer);
-            }
+            avatarBuffer = await this.getClientAvatar(clientDBId);
         }
         return Promise.resolve(avatarBuffer);
+    }
+
+    getCachedAvatar(clientDBId: number): ClientAvatarCache | undefined {
+        return this.fileCache.get<ClientAvatarCache>(`client_${clientDBId}_avatar`);
+    }
+
+    private createId() {
+        return uuidv4();
     }
 }
