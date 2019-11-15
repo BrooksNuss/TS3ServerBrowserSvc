@@ -86,7 +86,7 @@ export class TsClientConnection extends EventEmitter {
             while (remainingData > 0) {
                 try {
                     if (remainingData >= this.MAX_OUTSTREAM_BYTELENGTH) {
-                        // dataChannel.send(`{"type": "talkingClient", "data": "${headers[2] + headers[3]}"}`);
+                        // dataChannel.send(`{"type": "TALKINGCLIENT", "data": "${headers[2] + headers[3]}"}`);
                         this.source.onData(
                             {
                                 samples: audioBuffer.buffer.slice(currentIndex, this.MAX_OUTSTREAM_BYTELENGTH + currentIndex),
@@ -96,7 +96,7 @@ export class TsClientConnection extends EventEmitter {
                         remainingData -= this.MAX_OUTSTREAM_BYTELENGTH;
                         currentIndex += this.MAX_OUTSTREAM_BYTELENGTH;
                     } else {
-                        // dataChannel.send(`{"type": "talkingClient", "data": "${headers[2] + headers[3]}"}`);
+                        // dataChannel.send(`{"type": "TALKINGCLIENT", "data": "${headers[2] + headers[3]}"}`);
                         audioBuffer.set(audioBuffer.slice(currentIndex));
                         audioBuffer.fill(0, currentIndex);
                         this.source.onData(
@@ -136,19 +136,20 @@ export class TsClientConnection extends EventEmitter {
 
         };
         this.dataChannel.onmessage = message => {
-            const messageSplit = message.data.split(' ');
-            switch (messageSplit[0]) {
+            const messageData = JSON.parse(message.data) as IPCMessage;
+            switch (messageData.type) {
                 case 'VAD_ACTIVE': this.receivingAudio = true; break;
                 case 'VAD_INACTIVE': this.receivingAudio = false; break;
                 case 'DISCONNECT': this.closeConnection(); break;
-                case 'TOGGLE_MUTE_INPUT': this.sendIPCMessage(messageSplit); break;
-                case 'TOGGLE_MUTE_OUTPUT': this.sendIPCMessage(messageSplit); break;
+                case 'TOGGLE_MUTE_INPUT': this.sendIPCMessage(messageData); break;
+                case 'TOGGLE_MUTE_OUTPUT': this.sendIPCMessage(messageData); break;
+                case 'JOINCHANNEL': this.sendIPCMessage(messageData); break;
             }
         };
     }
 
-    sendIPCMessage(messageSplit: string[]) {
-        (this.ipc.server as any).broadcast({type: messageSplit[0], data: messageSplit.slice(1)});
+    sendIPCMessage(messageData: IPCMessage) {
+        (this.ipc.server as any).broadcast(messageData);
     }
 
     private rtcConnectionListener = () => {
