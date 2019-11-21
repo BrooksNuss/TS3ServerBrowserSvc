@@ -21,5 +21,6 @@ namespace NodeClient {
 		public string JOIN_CHANNEL = "JOIN_CHANNEL";
 		public string TOGGLE_INPUT_MUTE = "TOGGLE_INPUT_MUTE";
 		public string TOGGLE_OUTPUT_MUTE = "TOGGLE_OUTPUT_MUTE";
+		public string CLIENT_ID = "CLIENT_ID";
 	}
 }

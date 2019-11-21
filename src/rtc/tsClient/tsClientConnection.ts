@@ -57,6 +57,16 @@ export class TsClientConnection extends EventEmitter {
             );
         });
         this.ipc.server.start();
+        this.setupIPCListener();
+    }
+
+    setupIPCListener() {
+        this.ipc.server.on('data', data => {
+            const msg = JSON.parse(data.toString()) as IPCMessage;
+            switch (msg.type) {
+                case 'CLIENT_ID': this.dataChannel.send(JSON.stringify(msg)); break;
+            }
+        });
     }
 
     setupAudioInput() {

@@ -50,6 +50,8 @@ namespace NodeClient {
 			command.Type = type;
 			command.Values = values;
 			// convert command to json, send on ipc pipe
+			string json = JsonConvert.SerializeObject(command);
+			this.stream.Write(json);
 		}
 	}
 }

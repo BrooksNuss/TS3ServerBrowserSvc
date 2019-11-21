@@ -47,6 +47,7 @@ namespace NodeClient
 			client.OutStream = packetReader;
 			packetReader.Chain(decoderPipe);
 			decoderPipe.Chain(streamOutPipe);
+			commandPipe.sendCommand(IPCMessageType.CLIENT_ID, client.ClientId);
 		}
 	}
 }
