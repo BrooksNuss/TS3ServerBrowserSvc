@@ -23,7 +23,7 @@ export class ServerBrowserCacheService {
                 this.fileCache.set(avatarKey, avatarString);
                 return Promise.resolve(avatarString);
             } catch (e) {
-                console.error(e);
+                console.error('Error retrieving avatar for client: ' + client.nickname);
                 return Promise.resolve('');
             }
         }

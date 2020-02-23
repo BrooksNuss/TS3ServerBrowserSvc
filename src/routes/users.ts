@@ -1,6 +1,7 @@
 import express from 'express';
 import { ts3, fileCache } from '../app';
 import { ClientResponse } from './models/TSResponses';
+import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
 
 const userRouter = express.Router();
 
@@ -20,7 +21,7 @@ export async function getClientList(): Promise<ClientResponse[]> {
         clientList.forEach(client => {
             const promise = fileCache.getAvatar(client);
             promiseList.push(promise);
-            const resp = client as ClientResponse;
+            const resp: ClientResponse = mapClientToResponse(client);
             promise.then(avatar => {
                 resp.avatar = avatar;
                 responseList.push(resp);
@@ -33,6 +34,11 @@ export async function getClientList(): Promise<ClientResponse[]> {
         console.error(err);
     }
     return responseList;
+}
+
+function mapClientToResponse(client: TeamSpeakClient): ClientResponse {
+    const {clid, cid, databaseId, nickname, servergroups, channelGroupId} = client;
+    return {clid, cid, databaseId, nickname, servergroups, channelGroupId};
 }
 
 module.exports = {userRouter, getClientList};
