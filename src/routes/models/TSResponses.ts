@@ -7,7 +7,7 @@ export interface ClientResponse {
     cid: number;
     databaseId: number;
     nickname: string;
-    avatar?: string;
+    avatarGUID?: string;
     servergroups: Array<number> | undefined;
     channelGroupId: number | undefined;
 }

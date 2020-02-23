@@ -10,8 +10,8 @@ export interface RTCSessionDescriptionOffer {
 
 export enum TSCommand {
     SEND_AUDIO = 0,
-    DISCONNECT,
-    MOVE_CLIENT,
-    MUTE_INPUT,
-    MUTE_OUTPUT
+    DISCONNECT = 'DISCONNECT',
+    JOIN_CHANNEL = 'JOIN_CHANNEL',
+    TOGGLE_MUTE_INPUT = 'TOGGLE_MUTE_INPUT',
+    TOGGLE_MUTE_OUTPUT = 'TOGGLE_MUTE_OUTPUT'
 }

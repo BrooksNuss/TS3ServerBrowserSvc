@@ -15,17 +15,18 @@ export class ClientStatusService {
         this.interval = setInterval(this.updateClientStatuses, 5000);
     }
 
+    // should use cldbid instead of clid so that we can handle users going offline
     async updateClientStatuses() {
         const clientList = await ts3.clientList();
         const statusArr: ClientStatus[] = [];
         clientList.forEach(client => {
             if (client.away) {
-                statusArr.push({clid: client.clid, status: 'AWAY'});
+                statusArr.push({clientDBId: client.databaseId, status: 'AWAY'});
             } else if (client.idleTime) {
                 if (client.idleTime >= 300000) {
-                    statusArr.push({clid: client.clid, status: 'INACTIVE'});
+                    statusArr.push({clientDBId: client.databaseId, status: 'INACTIVE'});
                 } else {
-                    statusArr.push({clid: client.clid, status: 'ACTIVE'});
+                    statusArr.push({clientDBId: client.databaseId, status: 'ACTIVE'});
                 }
             }
         });
