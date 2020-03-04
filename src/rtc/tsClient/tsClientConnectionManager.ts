@@ -101,12 +101,16 @@ export class TsClientConnectionManager {
         });
     }
 
-    public deleteConnection(connection: TsClientConnection): boolean {
+    public deleteConnection(id: string): boolean {
         // const listener = this.closeListeners.get(connection);
         // this.closeListeners.delete(connection);
         // connection.removeListener('closed', listener);
-        connection.removeAllListeners('closed');
-        return this.connections.delete(connection.id);
+        const connection = this.getConnection(id);
+        if (connection) {
+            connection.removeAllListeners('closed');
+            return this.connections.delete(id);
+        }
+        return false;
     }
 
     getConnection(id: string): ChildProcess | undefined {

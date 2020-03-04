@@ -11,7 +11,7 @@ export class ServerBrowserCacheService {
         this.fileCache = new NodeCache({stdTTL: 86400, checkperiod: 3600});
     }
 
-    async getClientAvatar(clientDBId: number): Promise<ClientAvatarCache | undefined> {
+    private async getClientAvatar(clientDBId: number): Promise<ClientAvatarCache | undefined> {
         let avatarBuffer;
         const client = await ts3.getClientByDBID(clientDBId);
         let cacheObject: ClientAvatarCache | undefined;
@@ -51,7 +51,7 @@ export class ServerBrowserCacheService {
         return Promise.resolve(avatarBuffer);
     }
 
-    getCachedAvatar(clientDBId: number): ClientAvatarCache | undefined {
+    private getCachedAvatar(clientDBId: number): ClientAvatarCache | undefined {
         return this.fileCache.get<ClientAvatarCache>(`client_${clientDBId}_avatar`);
     }
 
