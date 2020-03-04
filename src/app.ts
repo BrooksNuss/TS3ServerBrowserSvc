@@ -33,15 +33,15 @@ const socketServer: SocketIO.Server = socketIo(httpsServer);
 
 TeamSpeak.connect(ts3Config).then(ts => {
     ts3 = ts;
-    ts3.on('ready', async () => {
-        try {
-            registerTSEvents(ts3);
-            setupTSListeners(ts3, socketServer);
-        } catch (e) {
-            console.log('error');
-            console.log(e);
-        }
-    });
+    // ts3.on('ready', async () => {
+    try {
+        registerTSEvents(ts3);
+        setupTSListeners(ts3, socketServer);
+    } catch (e) {
+        console.log('error');
+        console.log(e);
+    }
+    // });
 
     ts3.on('error', (err) => {
         console.log('TS3 ERROR');

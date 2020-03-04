@@ -30,6 +30,6 @@ export class ClientStatusService {
                 }
             }
         });
-        socketServer.emit('clientstatus', statusArr);
+        socketServer.emit('clientstatus', {statusArr});
     }
 }

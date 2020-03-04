@@ -1,6 +1,5 @@
 import NodeCache from 'node-cache';
 import { ts3 } from '../app';
-import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
 import { ClientAvatarCache } from './models/AvatarCacheModel';
 const uuidv4 = require('uuidv4');
 
