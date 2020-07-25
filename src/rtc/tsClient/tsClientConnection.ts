@@ -1,7 +1,7 @@
 import { WebRtcConnection } from '../connections/webrtcConnection';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { Writable, Readable } from 'stream';
-import { IPCMessage } from '../models/IPCMessage';
+import { IPCMessage } from '../../models/rtc/IPCMessage';
 import { IPC } from 'node-ipc';
 import { ts3Config } from '../../config';
 const {RTCAudioSink, RTCAudioSource} = require('wrtc').nonstandard;

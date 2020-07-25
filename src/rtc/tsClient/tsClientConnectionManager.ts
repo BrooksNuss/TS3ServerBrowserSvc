@@ -1,6 +1,6 @@
 import { TsClientConnection } from './tsClientConnection';
 import { fork, ChildProcess } from 'child_process';
-import { IPCMessage } from '../models/IPCMessage';
+import { IPCMessage } from '../../models/rtc/IPCMessage';
 const uuidv4 = require('uuid/v4');
 const path = require('path');
 

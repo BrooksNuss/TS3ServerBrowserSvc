@@ -1,41 +1,55 @@
 import { TeamSpeak } from 'ts3-nodejs-library';
+import { mapClientToResponse, mapChannelToResponse } from '../util/ModelMappers';
+import { ServerStateService } from '../cache/serverState.service';
+import { SocketServerService } from './socketServer.service';
+import { ClientResponse, ChannelResponse } from 'models/response/TSResponses';
 
 /**
  * Helper funciton for setting up TeamSpeak event listeners
  * @param ts3 TS3 server object
- * @param socketServer websocket server
+ * @param socketServerService websocket server service
+ * @param serverStateService service for handling server state
  */
-export function setupTSListeners(ts3: TeamSpeak, socketServer: SocketIO.Server) {
+export function setupTSListeners(ts3: TeamSpeak, serverStateService: ServerStateService, socketServerService: SocketServerService) {
     ts3.on('clientconnect', event => {
-        socketServer.emit('clientconnect', event);
+        const client = serverStateService.connectClient(event.client);
+        socketServerService.socketEmit<ClientResponse>('clientconnect', mapClientToResponse(client));
     });
 
     ts3.on('clientdisconnect', event => {
-        socketServer.emit('clientdisconnect', event);
+        serverStateService.disconnectClient(event.client);
+        socketServerService.socketEmit<ClientResponse>('clientdisconnect', {clid: event.client.clid});
     });
 
     ts3.on('clientmoved', event => {
-        socketServer.emit('clientmoved', event);
+        const client = serverStateService.moveClient(event.client);
+        socketServerService.socketEmit<ClientResponse>('clientmoved', mapClientToResponse(client));
     });
 
     ts3.on('serveredit', event => {
-        socketServer.emit('serveredit', event);
+        // serverStateService.serverEdit(event);
+        // socketServer.emit('serveredit', event);
     });
 
     ts3.on('channeledit', event => {
-        socketServer.emit('channeledit', event);
+        const channel = serverStateService.channelEdit(event.channel);
+        // maybe include the invoker for some of these, it exists on event
+        socketServerService.socketEmit<ChannelResponse>('channeledit', mapChannelToResponse(channel));
     });
 
     ts3.on('channelcreate', event => {
-        socketServer.emit('channelcreate', event);
+        const channel = serverStateService.createChannel(event.channel);
+        socketServerService.socketEmit<ChannelResponse>('channelcreate', mapChannelToResponse(channel));
     });
 
     ts3.on('channelmoved', event => {
-        socketServer.emit('channelmoved', event);
+        const channel = serverStateService.moveChannel(event.channel);
+        socketServerService.socketEmit<ChannelResponse>('channelmoved', mapChannelToResponse(channel));
     });
 
     ts3.on('channeldelete', event => {
-        socketServer.emit('channeldelete', event);
+        serverStateService.deleteChannel(event.cid);
+        socketServerService.socketEmit<ChannelResponse>('channeldelete', {cid: event.cid});
     });
 }
 

@@ -1,4 +1,4 @@
-import { IPCMessage, RTCSessionDescriptionOffer } from '../models/IPCMessage';
+import { IPCMessage, RTCSessionDescriptionOffer } from '../../models/rtc/IPCMessage';
 
 const WebRTCPeerConnection = require('wrtc').RTCPeerConnection;
 const EventEmitter = require('events');

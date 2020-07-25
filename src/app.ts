@@ -6,6 +6,8 @@ import bodyParser = require('body-parser');
 import { TsClientConnectionManager } from './rtc/tsClient/tsClientConnectionManager';
 import { ServerBrowserCacheService } from './cache/serverBrowserCache.service';
 import { ClientStatusService } from './cache/clientStatus.service';
+import { ServerStateService } from './cache/serverState.service';
+import { SocketServerService } from './socket/socketServer.service';
 const path = require('path');
 const socketIo = require('socket.io');
 const cors = require('cors');
@@ -31,12 +33,19 @@ httpsServer.listen(expressPort, () => {
 });
 const socketServer: SocketIO.Server = socketIo(httpsServer);
 
+const rtcApp = new TsClientConnectionManager();
+const fileCacheService = new ServerBrowserCacheService();
+const socketServerService = new SocketServerService(socketServer);
+const clientStatusService = new ClientStatusService();
+const serverStateService = new ServerStateService(fileCacheService);
+
 TeamSpeak.connect(ts3Config).then(ts => {
     ts3 = ts;
     // ts3.on('ready', async () => {
+    serverStateService.initializeState();
     try {
         registerTSEvents(ts3);
-        setupTSListeners(ts3, socketServer);
+        setupTSListeners(ts3, serverStateService, socketServerService);
     } catch (e) {
         console.log('error');
         console.log(e);
@@ -58,8 +67,4 @@ socketServer.on('connection', (socket: any) => {
     });
 });
 
-const rtcApp = new TsClientConnectionManager();
-const fileCache = new ServerBrowserCacheService();
-const clientStatusService = new ClientStatusService();
-
-export {ts3, app, rtcApp, socketServer, fileCache};
+export {ts3, app, rtcApp, socketServerService, fileCacheService, serverStateService};

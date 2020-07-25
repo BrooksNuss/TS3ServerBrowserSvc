@@ -20,6 +20,7 @@
     "node-cache": "^5.0.1",
     "node-ipc": "^9.1.1",
     "socket.io": "^2.2.0",
+    "ts-node": "^8.10.2",
     "ts3-nodejs-library": "^2.1.0",
     "uuidv4": "^4.0.0",
     "wrtc": "^0.4.1"
@@ -29,6 +30,7 @@
     "@types/node": "^11.13.7",
     "@types/node-ipc": "^9.1.1",
     "@types/socket.io": "^2.1.2",
+    "tsconfig-paths": "^3.9.0",
     "tslint": "^5.16.0",
     "typescript": "^3.4.4"
   }

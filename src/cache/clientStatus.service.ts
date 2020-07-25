@@ -1,5 +1,7 @@
-import { ts3, socketServer } from '../app';
-import { ClientStatus } from './models/ClientStatus';
+import { ts3, socketServerService, serverStateService } from '../app';
+import { ClientStatus } from 'models/cache/CacheModels';
+import { ClientStatusResponse } from 'models/response/TSResponses';
+import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
 
 export class ClientStatusService {
     // public clientCache: NodeCache;
@@ -18,18 +20,24 @@ export class ClientStatusService {
     // should use cldbid instead of clid so that we can handle users going offline
     async updateClientStatuses() {
         const clientList = await ts3.clientList();
-        const statusArr: ClientStatus[] = [];
+        serverStateService.clients.forEach(client => {
+            const tsClient = clientList.find(tc => tc.clid === client.clid);
+            if (tsClient) {
+                client.idleTime = tsClient.idleTime;
+            }
+        });
+        const statusList: ClientStatus[] = [];
         clientList.forEach(client => {
             if (client.away) {
-                statusArr.push({clientDBId: client.databaseId, status: 'AWAY'});
+                statusList.push({clientDBId: client.databaseId, status: 'AWAY'});
             } else if (client.idleTime) {
                 if (client.idleTime >= 300000) {
-                    statusArr.push({clientDBId: client.databaseId, status: 'INACTIVE'});
+                    statusList.push({clientDBId: client.databaseId, status: 'INACTIVE'});
                 } else {
-                    statusArr.push({clientDBId: client.databaseId, status: 'ACTIVE'});
+                    statusList.push({clientDBId: client.databaseId, status: 'ACTIVE'});
                 }
             }
         });
-        socketServer.emit('clientstatus', {statusArr});
+        socketServerService.socketEmit<ClientStatusResponse>('clientstatus', {clients: statusList});
     }
 }
