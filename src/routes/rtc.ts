@@ -19,6 +19,7 @@ rtcRouter.post('/connections', (req, res) => {
     }
 });
 
+// remove?
 rtcRouter.delete('/connections/:id', (req, res) => {
     const {id} = req.params;
     // const connection = rtcApp.getConnection(id);

@@ -70,37 +70,27 @@ export class WebRtcConnection extends EventEmitter {
         }
     }
 
-    async doOffer() {
+    async doOffer(): Promise<RTCSessionDescriptionInit> {
         const offer = await this.peerConnection.createOffer({offerToReceiveAudio: true});
         await this.peerConnection.setLocalDescription(offer);
         try {
             await this.waitUntilIceGatheringStateComplete();
-            if (process.send) {
-                const msg: IPCMessage<RTCSessionDescriptionOffer> = {
-                    type: 'doOffer',
-                    data: {localDescription: this.peerConnection.localDescription, id: this.id}
-                };
-                process.send(msg);
+            if (!this.localDescription) {
+                return Promise.reject();
             }
+            return this.localDescription;
         } catch (error) {
             this.close();
-            if (process.send) {
-                const msg: IPCMessage<RTCSessionDescriptionInit> = {type: 'error', data: error};
-                process.send(msg);
-            }
+            return Promise.reject(error);
         }
     }
 
     async applyAnswer(answer: RTCSessionDescriptionInit) {
         try {
             await this.peerConnection.setRemoteDescription(answer);
-            if (process.send) {
-                process.send({type: 'answer', data: this.remoteDescription} as IPCMessage<RTCSessionDescriptionInit>);
-            }
+            return this.remoteDescription as RTCSessionDescriptionInit;
         } catch (error) {
-            if (process.send) {
-                process.send({type: 'error', data: error} as IPCMessage);
-            }
+            return error;
         }
     }
 
@@ -130,8 +120,8 @@ export class WebRtcConnection extends EventEmitter {
         };
     }
 
-    descriptionToJSON(description: RTCSessionDescription | null, shouldDisableTrickleIce: boolean) {
-        return !description ? {} : {
+    descriptionToJSON(description: RTCSessionDescription | null, shouldDisableTrickleIce: boolean): RTCSessionDescriptionInit | null {
+        return !description ? null : {
             type: description.type,
             sdp: shouldDisableTrickleIce ? this.disableTrickleIce(description.sdp) : description.sdp,
         };
