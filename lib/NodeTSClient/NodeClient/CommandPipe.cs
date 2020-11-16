@@ -2,18 +2,18 @@ using Newtonsoft.Json;
 using System;
 using System.IO.Pipes;
 using System.Text;
-using TS3Client.Commands;
-using TS3Client.Full;
+using TSLib.Commands;
+using TSLib.Full;
 
 namespace NodeClient {
 	internal class CommandPipe {
 		public bool active = false;
 		private string id;
-		private Ts3FullClient client;
+		private TsFullClient client;
 		NamedPipeClientStream stream;
-		private byte[] buffer = new byte[256];
+		private byte[] buffer = new byte[1024];
 
-		public CommandPipe(Ts3FullClient client, string id) {
+		public CommandPipe(TsFullClient client, string id) {
 			this.client = client;
 			this.id = id;
 			stream = new NamedPipeClientStream(".", id, PipeDirection.InOut, PipeOptions.Asynchronous);
@@ -25,11 +25,11 @@ namespace NodeClient {
 		private async void init() {
 			while (active) {
 				await stream.ReadAsync(buffer, 0, buffer.Length);
-				processCommand(buffer);
+				processStream(buffer);
 			}
 		}
 
-		private void processCommand(byte[] data) {
+		private void processStream(byte[] data) {
 			string jsonString = Encoding.UTF8.GetString(data);
 			TSClientCommand command = JsonConvert.DeserializeObject<TSClientCommand>(jsonString);
 			switch (command.Type) {

@@ -1,25 +1,27 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using TS3Client;
-using TS3Client.Full;
-using TS3Client.Audio;
+using TSLib.Full;
+using TSLib;
+using TSLib.Audio;
 
 namespace NodeClient
 {
 	class NodeClient
 	{
+		private List<TsFullClient> clientList = new List<TsFullClient>();
 		static void Main(string[] args)
 		{
-			Ts3FullClient client = new Ts3FullClient(TS3Client.EventDispatchType.DoubleThread);
+			TsFullClient client = new TsFullClient();
 			VersionSign version = VersionSign.VER_WIN_3_2_3;
 			IdentityData identity;
 			//Thread.Sleep(20000);
 			string id = args[0];
 			if (!string.IsNullOrEmpty(args[2])) {
-				identity = Ts3Crypt.LoadIdentityDynamic(args[2]).Value;
+				identity = TsCrypt.LoadIdentityDynamic(args[2]).Value;
 			} else {
-				identity = Ts3Crypt.GenerateNewIdentity();
+				identity = TsCrypt.GenerateNewIdentity();
 			}
 			var connectionConfig = new ConnectionDataFull
 			{
@@ -32,9 +34,9 @@ namespace NodeClient
 				DefaultChannelPassword = args[4],
 			};
 			client.Connect(connectionConfig);
-			CommandPipe commandPipe = new CommandPipe(client, id);
+			//CommandPipe commandPipe = new CommandPipe(client, id);
 			Stream stdin = Console.OpenStandardInput();
-			Stream stdout = Console.OpenStandardOutput();
+			//Stream stdout = Console.OpenStandardOutput();
 			int ScaleBitrate(int value) => Math.Min(Math.Max(1, value), 255) * 1000;
 			CheckActivePipe activePipe = new CheckActivePipe();
 			AsyncStreamAudioProducer streamInPipe = new AsyncStreamAudioProducer(stdin, activePipe);
@@ -47,7 +49,7 @@ namespace NodeClient
 			client.OutStream = packetReader;
 			packetReader.Chain(decoderPipe);
 			decoderPipe.Chain(streamOutPipe);
-			commandPipe.sendCommand(IPCMessageType.CLIENT_ID, client.ClientId);
+			//commandPipe.sendCommand(IPCMessageType.CLIENT_ID, client.ClientId);
 		}
 	}
 }
