@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using TSLib;
 using TSLib.Full;
 
@@ -48,13 +46,15 @@ namespace NodeClient {
 					clientSetup.sendVoiceMessage((IPCMessageVoice)message.data);
 					break;
 				case IPCMessageType.DISCONNECT:
-					client.Disconnect(); break;
+					clientSetup.Disconnect();
+					break;
 				case IPCMessageType.JOIN_CHANNEL:
-					client.ClientMove(client.ClientId, Convert.ToUInt64(command.Values[0])); break;
-				case IPCMessageType.TOGGLE_INPUT_MUTE:
-					client.Send("clientupdate", new CommandParameter("client_input_muted", Convert.ToInt32(command.Values[0]) != 0)); break;
-				case IPCMessageType.TOGGLE_OUTPUT_MUTE:
-					client.Send("clientupdate", new CommandParameter("client_output_muted", Convert.ToInt32(command.Values[0]) != 0)); break;
+					clientSetup.MoveChannel(((IPCMessageJoinChannel)message.data).cid);
+					break;
+				//case IPCMessageType.TOGGLE_INPUT_MUTE:
+				//	client.Send("clientupdate", new CommandParameter("client_input_muted", Convert.ToInt32(command.Values[0]) != 0)); break;
+				//case IPCMessageType.TOGGLE_OUTPUT_MUTE:
+				//	client.Send("clientupdate", new CommandParameter("client_output_muted", Convert.ToInt32(command.Values[0]) != 0)); break;
 					// more client instructions go here
 			}
 		}

@@ -2,7 +2,7 @@ import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
 import { TeamSpeakChannel } from 'ts3-nodejs-library/lib/node/Channel';
 import { TeamSpeakServerGroup } from 'ts3-nodejs-library/lib/node/ServerGroup';
 import { TeamSpeakChannelGroup } from 'ts3-nodejs-library/lib/node/ChannelGroup';
-import { ts3, fileCacheService } from '../app';
+import { ts3 } from '../app';
 import { ClientList } from 'ts3-nodejs-library/lib/types/ResponseTypes';
 import { Client } from 'models/business/Client';
 import { Channel } from 'models/business/Channel';
@@ -21,7 +21,9 @@ export class ServerStateService {
     public serverGroups: Map<number, ServerGroup> = new Map<number, ServerGroup>();
     public channelGroups: Map<number, ChannelGroup> = new Map<number, ChannelGroup>();
 
-    constructor(fileCacheService: ServerBrowserCacheService) {}
+    constructor(private fileCacheService: ServerBrowserCacheService) {
+        this.fileCacheService = fileCacheService;
+    }
 
     // we need our own business models here instead of using the ts3 models
     public initializeState() {
@@ -32,7 +34,7 @@ export class ServerStateService {
                     const clientModel = mapTSClientToBusiness(client);
                     this.clients.set(client.databaseId, clientModel);
                     // monitor startup performance
-                    const avatar = await fileCacheService.getAvatarByClient(client)
+                    const avatar = await this.fileCacheService.getAvatarByClient(client);
                     clientModel.avatar = avatar.avatarBuffer;
                     clientModel.avatarGuid = avatar.avatarGUID;
                 });
@@ -57,7 +59,7 @@ export class ServerStateService {
                     const group = mapTSServerGroupToBusiness(serverGroup);
                     this.serverGroups.set(serverGroup.sgid, group);
                     // monitor startup performance
-                    group.icon = await fileCacheService.getGroupIconByGroupId(serverGroup, 'server');
+                    group.icon = await this.fileCacheService.getGroupIconByGroupId(serverGroup, 'server');
                 });
             } else {
                 console.error('Could not retrieve TS server group list');
@@ -70,7 +72,7 @@ export class ServerStateService {
                     const group = mapTSChannelGroupToBusiness(channelGroup);
                     this.channelGroups.set(channelGroup.cgid, group);
                     // monitor startup performance
-                    group.icon = await fileCacheService.getGroupIconByGroupId(channelGroup, 'channel');
+                    group.icon = await this.fileCacheService.getGroupIconByGroupId(channelGroup, 'channel');
                 });
             } else {
                 console.error('Could not retrieve TS channel group list');

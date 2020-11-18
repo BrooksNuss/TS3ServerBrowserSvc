@@ -118,7 +118,7 @@ function startTSClient(peerConnection: RTCPeerConnection) {
 
     };
     dataChannel.onmessage = message => {
-        switch(message.data) {
+        switch (message.data) {
             case 'mute': muted = true; break;
             case 'unmute': muted = false; break;
         }

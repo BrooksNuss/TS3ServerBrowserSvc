@@ -38,5 +38,17 @@ namespace NodeClient {
 		public void sendVoiceMessage(IPCMessageVoice message) {
 			streamInPipe.Write(message.buffer);
 		}
+
+		public void Disconnect() {
+			this.client.Disconnect();
+		}
+
+		public void MoveChannel(string cid) {
+			if (ulong.TryParse(cid, out ulong parsedCid)) {
+				this.client.ChannelMove(new ChannelId(parsedCid));
+			} else {
+				Console.WriteLine("Invalid cid");
+			}
+		}
 	}
 }

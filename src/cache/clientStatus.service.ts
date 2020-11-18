@@ -2,6 +2,7 @@ import { ts3, socketServerService, serverStateService } from '../app';
 import { ClientStatus } from 'models/cache/CacheModels';
 import { ClientStatusResponse } from 'models/response/TSResponses';
 import { TeamSpeakClient } from 'ts3-nodejs-library/lib/node/Client';
+import { Client } from 'models/business/Client';
 
 export class ClientStatusService {
     // public clientCache: NodeCache;
@@ -20,7 +21,7 @@ export class ClientStatusService {
     // should use cldbid instead of clid so that we can handle users going offline
     async updateClientStatuses() {
         const clientList = await ts3.clientList();
-        serverStateService.clients.forEach(client => {
+        serverStateService.clients.forEach((client: Client) => {
             const tsClient = clientList.find(tc => tc.clid === client.clid);
             if (tsClient) {
                 client.idleTime = tsClient.idleTime;
