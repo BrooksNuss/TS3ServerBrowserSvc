@@ -7,16 +7,16 @@ export class WebRtcConnection extends EventEmitter {
     public id: string;
     public state: string;
     private timeToConnect = 10000;
-    private timeToHostCandidates = 3000;
+    private timeToHostCandidates = 5000;
     private timeToReconnect = 10000;
-    public peerConnection: webkitRTCPeerConnection;
+    public peerConnection: RTCPeerConnection;
     private reconnectTimer: NodeJS.Timeout | null;
     private connectTimer: NodeJS.Timeout | null;
     private get iceConnectionState() {
         return this.peerConnection.iceConnectionState;
     }
     private get localDescription() {
-        return this.descriptionToJSON(this.peerConnection.localDescription, true);
+        return this.descriptionToJSON(this.peerConnection.localDescription, false);
     }
     private get remoteDescription() {
         return this.descriptionToJSON(this.peerConnection.remoteDescription, false);
@@ -30,7 +30,6 @@ export class WebRtcConnection extends EventEmitter {
         this.id = id;
         this.state = 'open';
         this.peerConnection = new WebRTCPeerConnection({
-            sdpSemantics: 'unified-plan',
             iceServers: [{
                 urls: [
                 'stun:stun.l.google.com:19302',
@@ -46,6 +45,7 @@ export class WebRtcConnection extends EventEmitter {
         }, this.timeToConnect);
         this.reconnectTimer = null;
         this.peerConnection.addEventListener('iceconnectionstatechange', this.onIceConnectionStateChange);
+        this.peerConnection.addTransceiver('audio');
     }
 
     private onIceConnectionStateChange = () => {
@@ -71,7 +71,7 @@ export class WebRtcConnection extends EventEmitter {
     }
 
     async doOffer(): Promise<RTCSessionDescriptionInit> {
-        const offer = await this.peerConnection.createOffer({offerToReceiveAudio: true});
+        const offer = await this.peerConnection.createOffer();
         await this.peerConnection.setLocalDescription(offer);
         try {
             await this.waitUntilIceGatheringStateComplete();
@@ -142,20 +142,28 @@ export class WebRtcConnection extends EventEmitter {
             resolve = res;
             reject = rej;
         });
+        const minimumCandidates = 10;
+        let candidatesFound = 0;
         const onIceCandidate = (e: RTCPeerConnectionIceEvent) => {
+            candidatesFound++;
             if (!e.candidate) {
                 clearTimeout(timeout);
                 this.peerConnection.removeEventListener('icecandidate', onIceCandidate);
                 resolve();
             }
         };
+        // only gather for a short time, so the connection doesn't time out
         timeout = setTimeout(() => {
-            this.peerConnection.removeEventListener('icecandidate', onIceCandidate);
-            Promise.reject(new Error('Timed out waiting for host candidates'));
+            if (candidatesFound > minimumCandidates) {
+                this.peerConnection.removeEventListener('icecandidate', onIceCandidate);
+                resolve();
+            } else {
+                Promise.reject(new Error('Timed out waiting for host candidates'));
+            }
         }, this.timeToHostCandidates);
         console.log(this.peerConnection.connectionState);
         this.peerConnection.addEventListener('icecandidate', onIceCandidate);
 
-        await promise;
+        return promise;
     }
 }

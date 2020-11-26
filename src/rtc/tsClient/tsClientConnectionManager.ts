@@ -1,6 +1,7 @@
 import { TsClientConnection } from './tsClientConnection';
 import { IPCMessage, IPCMessageConnect, IPCMessageDataType } from '../../models/rtc/IPCMessage';
 import { IPC } from 'node-ipc';
+import { RTCCreateConnectionResponse } from 'models/rtc/RTCResponses';
 const uuidv4 = require('uuid/v4');
 const path = require('path');
 
@@ -19,17 +20,15 @@ export class TsClientConnectionManager {
         return id;
     }
 
-    async createConnection(): Promise<RTCSessionDescriptionInit> {
+    async createConnection(): Promise<RTCCreateConnectionResponse> {
         const id = this.createId();
         const client = new TsClientConnection(id, this);
         this.connections.set(id, client);
-        let res;
         try {
-            res = client.webRtcConnection.doOffer();
+            return { offer: await client.webRtcConnection.doOffer(), id };
         } catch (e) {
             return Promise.reject(e);
         }
-        return res;
         // const connectionProcess = fork(this.childPath, [id], {execArgv: ['--inspect-brk'], silent: true});
         // connectionProcess.on('close', () => {
         //     const proc = this.connections.get(id);
