@@ -37,7 +37,7 @@ namespace NodeClient {
 			TsClientAudioSetup clientSetup;
 			try {
 				clientSetup = clientMap[message.clid];
-			} catch (ArgumentNullException e) {
+			} catch (ArgumentNullException) {
 				Console.WriteLine($"Invalid clid received: {message.clid}");
 				return;
 			}

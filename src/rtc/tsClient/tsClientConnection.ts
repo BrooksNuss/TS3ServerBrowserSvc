@@ -17,7 +17,7 @@ export class TsClientConnection extends EventEmitter {
     public clid = '-1';
     private peerConnection: RTCPeerConnection;
     private MAX_OUTSTREAM_BYTELENGTH = 960;
-    private receivingAudio = true;
+    private receivingAudio = false;
     private rtcConnected = false;
     private sink: any;
     private source: any;
@@ -105,7 +105,7 @@ export class TsClientConnection extends EventEmitter {
     setupAudioInput() {
         this.sink = new RTCAudioSink(this.peerConnection.getTransceivers()[0].receiver.track);
         this.sink.ondata = (data: any) => {
-            if (!this.receivingAudio) {
+            if (this.receivingAudio) {
                 const buffer = Buffer.from(data.samples.buffer as ArrayBuffer);
                 // if (this.tsClient && this.tsClient.stdin && (this.tsClient.stdin as any).readyState !== 'closed' && !this.tsClient.killed) {
                 //     (this.tsClient.stdin as Writable).write(buffer);
@@ -175,7 +175,7 @@ export class TsClientConnection extends EventEmitter {
 
     setupDataChannel() {
         this.dataChannel.onopen = () => {
-
+            console.log('data channel opened');
         };
         this.dataChannel.onclose = () => {
 

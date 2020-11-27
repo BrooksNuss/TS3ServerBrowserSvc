@@ -10,7 +10,9 @@ export class TsClientConnectionManager {
     private ipc = new IPC();
     private id = 'NodeTsStream';
 
-    constructor() {}
+    constructor() {
+        this.setupIPCServer();
+    }
 
     private createId() {
         let id: string;
@@ -94,12 +96,14 @@ export class TsClientConnectionManager {
         return uuidv4();
     }
 
-    setupTsClient() {
+    setupIPCServer() {
         this.ipc.config.id = this.id;
-        this.ipc.config.appspace = 'NodeTS';
-        this.ipc.serve(this.id);
+        this.ipc.config.appspace = 'NodeTS/';
+        this.ipc.config.silent = true;
+        this.ipc.serve(() => {
+            this.setupIPCListener();
+        });
         this.ipc.server.start();
-        this.setupIPCListener();
     }
 
     setupIPCListener() {
@@ -127,7 +131,7 @@ export class TsClientConnectionManager {
         });
     }
 
-    public sendIPCMessage(message: IPCMessage) {
-        (this.ipc.server as any).broadcast(message);
+    public sendIPCMessage(message: IPCMessage, type: string = 'user') {
+        (this.ipc.server as any).broadcast(type, message);
     }
 }
