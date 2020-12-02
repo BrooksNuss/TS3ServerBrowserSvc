@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace NodeTSClient {
     class Program {
-		public ClientConnectionManager manager = new ClientConnectionManager("0");
         static void Main(string[] args) {
+			ClientConnectionManager manager = new ClientConnectionManager("tmp-NodeTS-NodeTsStream");
 			Console.ReadLine();
         }
     }

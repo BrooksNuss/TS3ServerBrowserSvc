@@ -12,7 +12,7 @@ namespace NodeClient {
 		public bool active = false;
 		private string id;
 		NamedPipeClientStream stream;
-		private byte[] buffer = new byte[256];
+		private byte[] buffer = new byte[4096];
 		private MessageReceivedHandler handlerDelegate;
 
 		public ClientConnectionManager(string id) {
@@ -25,14 +25,15 @@ namespace NodeClient {
 		}
 
 		private async void init() {
+			int bufferLength;
 			while (active) {
-				await stream.ReadAsync(buffer, 0, buffer.Length);
-				receiveMessage(buffer);
+				bufferLength = await stream.ReadAsync(buffer, 0, buffer.Length);
+				receiveMessage(buffer, bufferLength);
 			}
 		}
 
-		private void receiveMessage(byte[] data) {
-			string jsonString = Encoding.UTF8.GetString(data);
+		private void receiveMessage(byte[] data, int bufferLength) {
+			string jsonString = Encoding.UTF8.GetString(data.AsSpan(0, bufferLength - 1));
 			var message = JsonSerializer.Deserialize<IPCMessage>(jsonString);
 			TsClientAudioSetup clientSetup;
 			try {
